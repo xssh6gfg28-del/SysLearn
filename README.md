@@ -1,27 +1,20 @@
-WG1 Lern-Quiz
+# Lern-Quiz (mehrere Fächer)
 
-Installierbare Lern-App (PWA) für Wirtschaftliche Grundlagen 1 mit 378 Fragen aus dem WG1-Skript. Läuft im Browser, lässt sich aufs Handy installieren und funktioniert danach auch offline. Alle Daten (Fortschritt, eigene Fragen) bleiben lokal auf dem Gerät.
+Installierbare Lern-App (PWA), funktioniert offline. Fächer: **WG1** (378 Fragen) und **WG2** (392 Fragen).
+Oben in der App wählst du das Fach; Fortschritt, Statistik und eigene Fragen werden pro Fach getrennt gespeichert.
 
-Funktionen
-Lernmodus: Sofort-Feedback mit Erklärung nach jeder Antwort
-Prüfungsmodus: Timer, freies Springen zwischen Fragen, Note am Ende (IHK-Schlüssel)
-Zufallsauswahl: 10, 25, 40, 60 oder 100 Fragen pro Test, neue Tests bevorzugen noch nicht gesehene Fragen
-Themenfilter nach Skript-Kapiteln:
-Wirtschaften & Märkte
-Volkswirtschaft
-Verträge & Kaufvertrag
-Mängel, Verzug, Mahnwesen
-Kostenrechnung & BAB
-Kalkulation
-Deckungsbeitrag
-Marketing
-Daten & Präsentation
-Statistik: Trefferquote pro Thema, schwächste Fragen, Testverlauf, „Schwächen trainieren“
-Eigene Fragen: hinzufügen, löschen, als Datei exportieren und importieren
-Installieren
-Gerät	So geht's
-Android (Chrome)	Seite öffnen → Menü ⋮ → App installieren
-iPhone (Safari)	Teilen-Symbol → Zum Home-Bildschirm
-PC (Chrome/Edge)	Installations-Symbol rechts in der Adressleiste
+## Dateien
+- `index.html` – die App
+- `sw.js` – Offline-Cache
+- `faecher.js` – Liste der Fächer + `APP_VERSION`
+- `data-wg1.js`, `data-wg2.js` – die Fragen je Fach
+- `manifest.webmanifest`, `icons/` – Installation auf dem Handy
 
-Beim ersten Mal die Seite einmal mit Internet öffnen, danach läuft sie auch offline.
+## Neues Fach hinzufügen
+1. Neue Datei `data-<fach>.js` anlegen (Aufbau wie `data-wg2.js`: `FACH_DATA.<id> = {name,title,sub,tags,raw}`).
+2. In `faecher.js` den Dateinamen in `FACH_FILES` ergänzen.
+3. In `faecher.js` `APP_VERSION` um 1 erhöhen (sonst zeigt die App weiter den alten Cache).
+4. Alles auf GitHub hochladen, App zweimal schließen und öffnen.
+
+## Frage-Format
+`[Kapitel, Frage, RICHTIGE Antwort, falsch1, falsch2, falsch3, Erklärung]` – die Antworten werden beim Üben gemischt.
