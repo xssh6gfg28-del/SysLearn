@@ -115,6 +115,29 @@ textarea{min-height:64px;resize:vertical}
 .msg{font-size:.88rem;margin:8px 0 0}
 .msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
 @media (max-width:480px){.meter .lab{flex-basis:110px}}
+
+/* ---------- Maskottchen ---------- */
+.mrow{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+.mascot{flex:0 0 auto;width:76px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.mascot svg{width:100%;height:auto;display:block;overflow:visible}
+.mascot .tail{transform-origin:82px 112px;animation:wag 3.2s ease-in-out infinite}
+.mascot .eo{transform-origin:60px 48px;animation:blink 4.5s infinite}
+.mascot .eh,.mascot .es,.mascot .m-open,.mascot .m-sad{display:none}
+.mascot[data-mood=happy] .eo,.mascot[data-mood=cheer] .eo,.mascot[data-mood=sad] .eo{display:none}
+.mascot[data-mood=happy] .eh,.mascot[data-mood=cheer] .eh{display:inline}
+.mascot[data-mood=happy] .m-smile,.mascot[data-mood=cheer] .m-smile,.mascot[data-mood=sad] .m-smile{display:none}
+.mascot[data-mood=happy] .m-open,.mascot[data-mood=cheer] .m-open{display:inline}
+.mascot[data-mood=sad] .es,.mascot[data-mood=sad] .m-sad{display:inline}
+.mascot[data-mood=sad] svg{transform:rotate(-4deg) translateY(3px)}
+.mascot.jump svg{animation:hop .6s ease}
+.mascot[data-mood=cheer] .tail{animation:wag .5s ease-in-out infinite}
+.mascot[data-mood=cheer] svg{animation:hop .7s ease infinite}
+.bubble{position:relative;background:var(--accent-weak);border-radius:14px;padding:8px 12px;font-size:.92rem;line-height:1.35;min-height:38px;display:flex;align-items:center}
+.bubble:before{content:"";position:absolute;left:-7px;top:50%;margin-top:-7px;border:7px solid transparent;border-left:0;border-right-color:var(--accent-weak)}
+@keyframes wag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-14px) scale(1.04,.97)}65%{transform:translateY(0) scale(1.03,.96)}}
+@media (prefers-reduced-motion:reduce){.mascot .tail,.mascot .eo,.mascot[data-mood=cheer] svg,.mascot[data-mood=cheer] .tail{animation:none}}
 </style>
 </head>
 <body>
@@ -132,6 +155,7 @@ textarea{min-height:64px;resize:vertical}
   <!-- ÜBEN -->
   <section id="practice">
     <div class="card">
+      <div class="mrow"></div>
       <h2>Dein Stand</h2>
       <div class="stat">
         <div><b id="stPool">–</b><span>Fragen im Pool</span></div>
@@ -216,6 +240,7 @@ textarea{min-height:64px;resize:vertical}
     <div class="card">
       <div class="top"><span id="qCount"></span><span class="timer hidden" id="timer"></span><span class="badge" id="qTag"></span></div>
       <div class="bar"><i id="bar"></i></div>
+      <div class="mrow"></div>
       <p class="q" id="qText"></p>
       <div class="opts" id="opts"></div>
       <div id="fb" class="fb hidden" aria-live="polite"></div>
@@ -232,6 +257,7 @@ textarea{min-height:64px;resize:vertical}
   <!-- ERGEBNIS -->
   <section id="result" class="hidden">
     <div class="card">
+      <div class="mrow"></div>
       <h2 id="rTitle">Ergebnis</h2>
       <div class="score" id="rScore"></div>
       <div class="grade hidden" id="rGrade"></div>
@@ -292,6 +318,47 @@ function setFach(id){
   document.title = d.name + " Lern-Quiz";
   renderFachBar();
 }
+const MASCOT_SVG = `<svg viewBox="0 0 120 130" aria-hidden="true">
+<g class="tail"><path d="M82 112C112 112 118 70 100 44C94 34 98 22 90 18C80 30 72 40 80 62C84 74 74 86 70 100Z" fill="#e8873a"/><path d="M88 104C106 98 108 70 97 52C94 62 92 74 84 90Z" fill="#f7bd78"/></g>
+<ellipse cx="46" cy="124" rx="9" ry="4.5" fill="#e07a30"/><ellipse cx="74" cy="124" rx="9" ry="4.5" fill="#e07a30"/>
+<ellipse cx="60" cy="98" rx="27" ry="28" fill="#f09a4a"/><ellipse cx="60" cy="106" rx="16" ry="18" fill="#f8e6cc"/>
+<path d="M32 34L36 8L52 26Z" fill="#f09a4a"/><path d="M37 28L38 15L47 25Z" fill="#f7b5b5"/>
+<path d="M88 34L84 8L68 26Z" fill="#f09a4a"/><path d="M83 28L82 15L73 25Z" fill="#f7b5b5"/>
+<ellipse cx="60" cy="50" rx="35" ry="29" fill="#f09a4a"/>
+<ellipse cx="40" cy="62" rx="15" ry="11" fill="#fff6e8"/><ellipse cx="80" cy="62" rx="15" ry="11" fill="#fff6e8"/><ellipse cx="60" cy="63" rx="11" ry="8" fill="#fff6e8"/>
+<circle cx="32" cy="60" r="4" fill="#f7a1a1" opacity=".75"/><circle cx="88" cy="60" r="4" fill="#f7a1a1" opacity=".75"/>
+<g class="eo"><ellipse cx="45" cy="48" rx="7.5" ry="9" fill="#2a1b2e"/><circle cx="42.5" cy="44" r="3" fill="#fff"/><circle cx="47.5" cy="52" r="1.5" fill="#fff"/>
+<ellipse cx="75" cy="48" rx="7.5" ry="9" fill="#2a1b2e"/><circle cx="72.5" cy="44" r="3" fill="#fff"/><circle cx="77.5" cy="52" r="1.5" fill="#fff"/></g>
+<g class="eh" fill="none" stroke="#2a1b2e" stroke-width="3.6" stroke-linecap="round"><path d="M38 51Q45 41 52 51"/><path d="M68 51Q75 41 82 51"/></g>
+<g class="es"><ellipse cx="45" cy="50" rx="7.5" ry="8.5" fill="#2a1b2e"/><circle cx="42.5" cy="46" r="3" fill="#fff"/><ellipse cx="75" cy="50" rx="7.5" ry="8.5" fill="#2a1b2e"/><circle cx="72.5" cy="46" r="3" fill="#fff"/>
+<path d="M37 40L52 35M68 35L83 40" stroke="#6b3a2a" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M36 58q-3.5 6 0 9q3.5-3 0-9Z" fill="#7cc4f5"/></g>
+<ellipse cx="60" cy="58" rx="3.5" ry="2.6" fill="#6b3a2a"/>
+<path class="m-smile" d="M53 65Q60 72 67 65" stroke="#6b3a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<g class="m-open"><path d="M52 64Q60 80 68 64Z" fill="#8b2f3a"/><path d="M56 71Q60 76 64 71Q60 69 56 71Z" fill="#f08a8a"/></g>
+<path class="m-sad" d="M54 70Q60 63 66 70" stroke="#6b3a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+<g><ellipse cx="60" cy="97" rx="8" ry="9" fill="#a8734a"/><path d="M51 94Q60 82 69 94Z" fill="#6e4a30"/><rect x="58.8" y="80" width="2.4" height="5" rx="1" fill="#6e4a30"/>
+<ellipse cx="50" cy="96" rx="5" ry="4" fill="#f09a4a"/><ellipse cx="70" cy="96" rx="5" ry="4" fill="#f09a4a"/></g>
+</svg>`;
+const SAY = {
+  ok:["Richtig! 🌰","Nuss geknackt!","Stark, weiter so!","Sauber gelöst!","Das sitzt!"],
+  bad:["Nicht schlimm – merk dir die Erklärung.","Das kommt noch!","Aus Fehlern wird man schlau.","Knapp daneben, weiter geht's."],
+  ask:["Welche Antwort stimmt?","Du schaffst das!","Lass dir Zeit.","Na, welche ist es?"],
+  exam:["Ruhig bleiben, du schaffst das.","Konzentration – nicht hetzen.","Erst lesen, dann klicken."]
+};
+const pickSay = a => a[Math.floor(Math.random()*a.length)];
+function mascot(mood,text,jump){
+  document.querySelectorAll(".mrow").forEach(r=>{
+    const m=r.firstChild; if(!m) return;
+    m.dataset.mood=mood; r.lastChild.textContent=text;
+    if(jump){ m.classList.remove("jump"); void m.offsetWidth; m.classList.add("jump"); }
+  });
+}
+function initMascot(){
+  document.querySelectorAll(".mrow").forEach(r=>{
+    r.innerHTML='<div class="mascot" data-mood="idle" role="img" aria-label="Maskottchen">'+MASCOT_SVG+'</div><div class="bubble"></div>';
+    r.firstChild.onclick=()=>mascot("happy",pickSay(["Hihi! 🐿️","Hast du eine Nuss für mich?","Weiter lernen, ich feuer dich an!","Kitzelt!"]),true);
+  });
+}
 function renderFachBar(){
   const bar=$("fachBar"); bar.innerHTML=""; bar.classList.toggle("hidden", FACH_IDS.length<2);
   FACH_IDS.forEach(id=>{ const b=document.createElement("button"); b.type="button"; b.textContent=FACH_DATA[id].name; b.setAttribute("aria-pressed", id===fach);
@@ -316,7 +383,7 @@ function poolFor(tags){ return allQ().filter(p=>tags.has(p.tag)); }
 function defaultMinutes(n){ return Math.max(1, Math.round(n*1.2)); }
 function renderPractice(){
   const pool = allQ(), seen = new Set(load(K_SEEN, []));
-  $("stPool").textContent = pool.length;
+  $("stPool").textContent = pool.length; mascot("idle","Bereit zum Lernen? Such dir Kapitel aus und leg los!");
   $("stSeen").textContent = pool.filter(p=>seen.has(p.id)).length;
   $("stNew").textContent = pool.filter(p=>!seen.has(p.id)).length;
   const chips=$("chips"); chips.innerHTML="";
@@ -361,7 +428,7 @@ const LET=["A","B","C","D"];
 function startTest(questions, m, minutes){
   if(!questions.length) return;
   const seen=new Set(load(K_SEEN,[])); questions.forEach(p=>seen.add(p.id)); save(K_SEEN,[...seen]);
-  test={ mode:m, idx:0, items:questions.map(p=>({p,opts:shuffle([p.correct,...p.wrong]),answer:null})), end:0, confirmSubmit:false };
+  test={ mode:m, idx:0, items:questions.map(p=>({p,opts:shuffle([p.correct,...p.wrong]),answer:null})), end:0, confirmSubmit:false, streak:0 };
   clearInterval(tick);
   $("tabs").classList.add("hidden"); showSection("test");
   const exam = m==="exam";
@@ -397,7 +464,7 @@ function renderQ(){
     const right=it.opts[it.answer]===it.p.correct;
     fb.className="fb "+(right?"ok":"bad");
     fb.innerHTML="<b>"+(right?"Richtig!":"Leider falsch.")+"</b>"+(right?"":"Richtig wäre: "+esc(it.p.correct)+"<br>")+esc(it.p.exp||"");
-  } else fb.className="fb hidden";
+  } else { fb.className="fb hidden"; mascot("idle", pickSay(exam?SAY.exam:SAY.ask)); }
   $("prev").disabled=test.idx===0;
   const last=test.idx===n-1;
   $("next").textContent = last ? (exam?"Abgeben ✓":"Auswerten ✓") : "Weiter →";
@@ -414,6 +481,10 @@ function choose(i){
   const it=test.items[test.idx];
   if(test.mode!=="exam" && it.answer!==null) return;
   it.answer=i; test.confirmSubmit=false; renderQ();
+  if(test.mode!=="exam"){
+    if(isRight(it)){ test.streak++; mascot("happy", test.streak>=3 ? test.streak+" in Folge! 🔥" : pickSay(SAY.ok), true); }
+    else { test.streak=0; mascot("sad", pickSay(SAY.bad), true); }
+  }
 }
 function next(){
   const exam=test.mode==="exam", last=test.idx===test.items.length-1;
@@ -451,6 +522,10 @@ function finish(timeUp){
   $("rTopics").innerHTML=Object.keys(per).sort().map(t=>"<div><b>"+per[t].ok+" / "+per[t].n+"</b>"+esc(TAGS[t])+"</div>").join("");
   $("redo").disabled = ok===n; $("onlyWrong").checked=false;
   $("tabs").classList.add("hidden"); renderReview(); showSection("result");
+  if(exam) mascot(pct>=50?"happy":"sad", pct>=50?"Prüfung geschafft! Gut gemacht.":"Das war noch nichts – aber jetzt weißt du, woran du arbeiten musst.", true);
+  else if(pct>=90) mascot("cheer","Mega! Das war richtig stark! 🎉");
+  else if(pct>=60) mascot("happy","Gut gemacht! Noch ein Durchgang?",true);
+  else mascot("sad","Übung macht den Meister – schau dir die Erklärungen an.");
 }
 function renderReview(){
   const only=$("onlyWrong").checked;
@@ -550,6 +625,7 @@ document.addEventListener("keydown", e=>{
 });
 
 /* ---------- Start + Service Worker ---------- */
+initMascot();
 setFach(load("quiz_fach", FACH_IDS[0]));
 setTab("practice");
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
