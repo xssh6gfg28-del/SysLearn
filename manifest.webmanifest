@@ -1,7 +1,7 @@
 {
-  "name": "WG1 Lern-Quiz",
-  "short_name": "WG1 Quiz",
-  "description": "Übungsquiz Wirtschaftliche Grundlagen 1 (Fachinformatiker)",
+  "name": "Lern-Quiz",
+  "short_name": "Lern-Quiz",
+  "description": "Lern-Quiz für die Umschulung (Fachinformatiker): WG1, WG2 und weitere Fächer",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

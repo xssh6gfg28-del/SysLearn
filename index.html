@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1d5fd1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="WG1 Quiz">
+<meta name="apple-mobile-web-app-title" content="Lern-Quiz">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
-<title>WG1 Lern-Quiz</title>
+<title>Lern-Quiz</title>
 <style>
 :root{
   --bg:#f6f7f9; --card:#ffffff; --text:#1c2430; --muted:#5d6877; --line:#dde2ea;
@@ -34,6 +34,9 @@ h3{font-size:.95rem;margin:14px 0 6px;color:var(--muted)}
 .tabs{display:flex;gap:6px;margin:10px 0 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px}
 .tabs button{flex:1;font:inherit;font-weight:600;font-size:.92rem;border:none;background:none;color:var(--muted);padding:9px 6px;border-radius:9px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent-weak);color:var(--accent)}
+.fach{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.fach button{font:inherit;font-weight:700;font-size:.9rem;border:2px solid var(--line);background:var(--card);color:var(--muted);padding:6px 14px;border-radius:999px;cursor:pointer}
+.fach button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
 .chip{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:7px 12px;font:inherit;font-size:.88rem;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent-weak);border-color:var(--accent);color:var(--accent);font-weight:600}
@@ -116,8 +119,9 @@ textarea{min-height:64px;resize:vertical}
 </head>
 <body>
 <div class="wrap">
-  <h1>WG1 Lern-Quiz</h1>
-  <p class="sub">Wirtschaftliche Grundlagen 1 · Skript (alle Kapitel)</p>
+  <h1>Lern-Quiz</h1>
+  <div class="fach" id="fachBar" role="group" aria-label="Fach wählen"></div>
+  <p class="sub" id="fachSub"></p>
 
   <nav class="tabs" id="tabs" role="tablist">
     <button role="tab" data-tab="practice" aria-selected="true">Üben</button>
@@ -182,7 +186,7 @@ textarea{min-height:64px;resize:vertical}
   <section id="questions" class="hidden">
     <div class="card">
       <h2>Eigene Frage hinzufügen</h2>
-      <p class="sub" style="margin-bottom:6px">Z. B. für spätere Tage (WG1 Tag 8–10) oder Stoff aus dem Unterricht. Sie kommen automatisch in den Pool.</p>
+      <p class="sub" style="margin-bottom:6px">Z. B. für Stoff aus dem Unterricht. Die Frage gehört zum aktuell gewählten Fach und kommt automatisch in den Pool.</p>
       <label class="field"><span>Thema</span><select id="nTag"></select></label>
       <label class="field"><span>Frage</span><textarea id="nQ" placeholder="Frage"></textarea></label>
       <label class="field"><span>Richtige Antwort</span><input type="text" id="nC"></label>
@@ -249,23 +253,19 @@ textarea{min-height:64px;resize:vertical}
   </section>
 </div>
 
-<script src="data.js"></script>
+<script src="faecher.js"></script>
+<script>FACH_FILES.forEach(function(f){ document.write('<script src="'+f+'"><\/script>'); });</script>
 <script>
-const TAGS = {
-  K1:"1 · Wirtschaften & Märkte", K2:"2 · Volkswirtschaft", K3:"3 · Verträge & Kaufvertrag",
-  K4:"4 · Mängel, Verzug, Mahnwesen", K5:"5 · Kostenrechnung & BAB", K6:"6 · Kalkulation",
-  K7:"7 · Deckungsbeitrag", K8:"8 · Marketing", K9:"9 · Daten & Präsentation", TX:"Eigene Fragen"
-};
+/* ---------- Fächer ---------- */
+const FACH_IDS = Object.keys(window.FACH_DATA || {});
+let fach = null, TAGS = {}, BUILTIN = [];
 function hid(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return "b"+(h>>>0).toString(36); }
-const BUILTIN = RAW.map(r=>({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6]}));
 
 /* ---------- Speicher (localStorage mit Fallback) ---------- */
 const mem = {};
 function load(k,def){ try{ const v=localStorage.getItem(k); if(v!==null) return JSON.parse(v); }catch(e){} return k in mem ? mem[k] : def; }
 function save(k,v){ mem[k]=v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-const K_SEEN="wg1_seen_v3", K_STATS="wg1_stats_v3", K_CUSTOM="wg1_custom_v2";
-let custom = load(K_CUSTOM, []);
-let stats = load(K_STATS, {q:{}, hist:[]});
+let K_SEEN, K_STATS, K_CUSTOM, custom = [], stats = {q:{}, hist:[]};
 const allQ = () => BUILTIN.concat(custom.map(c=>TAGS[c.tag]?c:{...c,tag:"TX"}));
 
 /* ---------- Helfer ---------- */
@@ -279,6 +279,25 @@ function arm(btn, label, fn){ // Zwei-Schritt-Bestätigung (ohne confirm())
 function flash(id, text, ok){ const m=$(id); m.textContent=text; m.className="msg "+(ok?"ok":"bad"); setTimeout(()=>m.classList.add("hidden"),5000); }
 function pctClass(p){ return p>=75?"":(p>=50?"mid":"low"); }
 
+function setFach(id){
+  if(!FACH_DATA[id]) id = FACH_IDS[0];
+  fach = id; const d = FACH_DATA[id];
+  save("quiz_fach", id);
+  TAGS = Object.assign({}, d.tags, {TX:"Eigene Fragen"});
+  BUILTIN = d.raw.map(r=>({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6]}));
+  K_SEEN = id+"_seen_v3"; K_STATS = id+"_stats_v3"; K_CUSTOM = id+"_custom_v2";
+  custom = load(K_CUSTOM, []); stats = load(K_STATS, {q:{}, hist:[]});
+  selTags.clear(); Object.keys(TAGS).forEach(t=>selTags.add(t));
+  $("fachSub").textContent = d.title + (d.sub ? " · " + d.sub : "");
+  document.title = d.name + " Lern-Quiz";
+  renderFachBar();
+}
+function renderFachBar(){
+  const bar=$("fachBar"); bar.innerHTML=""; bar.classList.toggle("hidden", FACH_IDS.length<2);
+  FACH_IDS.forEach(id=>{ const b=document.createElement("button"); b.type="button"; b.textContent=FACH_DATA[id].name; b.setAttribute("aria-pressed", id===fach);
+    b.onclick=()=>{ if(id===fach) return; test=null; clearInterval(tick); minutesTouched=false; setFach(id); setTab("practice"); }; bar.appendChild(b); });
+}
+
 /* ---------- Navigation ---------- */
 let tab="practice";
 function showSection(id){ ["practice","stats","questions","test","result"].forEach(s=>$(s).classList.toggle("hidden", s!==id)); window.scrollTo(0,0); }
@@ -290,7 +309,7 @@ function setTab(t){
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 
 /* ---------- ÜBEN ---------- */
-const selTags = new Set(Object.keys(TAGS));
+const selTags = new Set();
 let minutesTouched=false;
 function mode(){ return document.querySelector('input[name=mode]:checked').value; }
 function poolFor(tags){ return allQ().filter(p=>tags.has(p.tag)); }
@@ -503,7 +522,7 @@ $("addQ").onclick=()=>{
 const exportJson = () => JSON.stringify(custom.map(({tag,q,correct,wrong,exp})=>({tag,q,correct,wrong,exp})), null, 2);
 $("exp").onclick=()=>{
   if(!custom.length){ $("ioMsg").classList.remove("hidden"); flash("ioMsg","Keine eigenen Fragen zum Exportieren.",false); return; }
-  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([exportJson()],{type:"application/json"})); a.download="wg1-eigene-fragen.json"; document.body.appendChild(a); a.click(); a.remove(); }
+  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([exportJson()],{type:"application/json"})); a.download=fach+"-eigene-fragen.json"; document.body.appendChild(a); a.click(); a.remove(); }
   catch(e){ $("ioMsg").classList.remove("hidden"); flash("ioMsg","Download nicht möglich – nutze „In Zwischenablage“.",false); }
 };
 $("copy").onclick=async()=>{
@@ -531,6 +550,7 @@ document.addEventListener("keydown", e=>{
 });
 
 /* ---------- Start + Service Worker ---------- */
+setFach(load("quiz_fach", FACH_IDS[0]));
 setTab("practice");
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));

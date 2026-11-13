@@ -1,5 +1,8 @@
-const CACHE = "wg1quiz-v2";
-const FILES = ["./","./index.html","./data.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png"];
+importScripts("faecher.js"); // liefert APP_VERSION und FACH_FILES
+const CACHE = "quiz-v" + APP_VERSION;
+const FILES = ["./", "./index.html", "./faecher.js", "./manifest.webmanifest",
+  "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"]
+  .concat(FACH_FILES.map(f => "./" + f));
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
