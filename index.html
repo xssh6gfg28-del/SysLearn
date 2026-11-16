@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1d5fd1">
+<meta name="theme-color" content="#f2602f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lern-Quiz">
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,13 +12,17 @@
 <title>Lern-Quiz</title>
 <style>
 :root{
-  --bg:#f6f7f9; --card:#ffffff; --text:#1c2430; --muted:#5d6877; --line:#dde2ea;
-  --accent:#1d5fd1; --accent-weak:#e6eefc; --ok:#17803d; --ok-bg:#e4f5ea; --bad:#b42318; --bad-bg:#fdeaea; --warn:#b54708;
-  --radius:12px;
+  --bg:#fff4ec; --card:#ffffff; --text:#3b2a22; --muted:#8a7165; --line:#f1ddd0;
+  --accent:#f2602f; --accent-weak:#ffe6d8; --ok:#1f9d60; --ok-bg:#dff5e9; --bad:#e0483f; --bad-bg:#fde6e3; --warn:#d9822b;
+  --t1:#ffe1d1; --t2:#fff0c4; --t3:#d8f3e5; --t4:#e5defa; --t5:#d6ebfb; --t6:#fcdde7;
+  --blob1:#ffd5bd; --blob2:#ffeeb0; --shadow:0 8px 22px rgba(242,96,47,.10);
+  --radius:22px;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#12161c; --card:#1b212a; --text:#e8ecf2; --muted:#9aa5b5; --line:#2c3441;
-  --accent:#6ea2ff; --accent-weak:#1f2d47; --ok:#5fd68a; --ok-bg:#16301f; --bad:#ff8a80; --bad-bg:#3a1b1b; --warn:#ffb86b;}
+  :root{--bg:#231815; --card:#32241f; --text:#fbeee6; --muted:#c3a999; --line:#4a352d;
+  --accent:#ff8a5c; --accent-weak:#4a2c20; --ok:#5fd68a; --ok-bg:#1c3a29; --bad:#ff8a80; --bad-bg:#4a2323; --warn:#ffb86b;
+  --t1:#4d2f23; --t2:#473b1c; --t3:#1f3d2f; --t4:#35305a; --t5:#223e55; --t6:#52283a;
+  --blob1:#4a2a1d; --blob2:#3b3217; --shadow:0 8px 22px rgba(0,0,0,.35);}
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -138,13 +142,83 @@ textarea{min-height:64px;resize:vertical}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
 @keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-14px) scale(1.04,.97)}65%{transform:translateY(0) scale(1.03,.96)}}
 @media (prefers-reduced-motion:reduce){.mascot .tail,.mascot .eo,.mascot[data-mood=cheer] svg,.mascot[data-mood=cheer] .tail{animation:none}}
+
+/* ---------- Warmes Design ---------- */
+body{font-family:ui-rounded,"SF Pro Rounded","Nunito","Quicksand","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;position:relative}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle at 105% -5%,var(--blob1) 0,transparent 42%),radial-gradient(circle at -5% 105%,var(--blob2) 0,transparent 38%)}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#ff8a4d 0%,#f2522e 100%);color:#fff;border-radius:28px;padding:18px 18px 16px;margin-bottom:14px;box-shadow:0 12px 26px rgba(242,82,46,.30)}
+.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.14)}
+.hero:before{width:150px;height:150px;right:-40px;top:-60px}
+.hero:after{width:90px;height:90px;right:50px;bottom:-50px;background:rgba(255,230,120,.28)}
+.hero>*{position:relative;z-index:1}
+.hero h1{font-size:1.65rem;font-weight:800;margin:0 0 2px;letter-spacing:.2px}
+.hero .sub{color:rgba(255,255,255,.9);margin:0 0 12px;font-size:.88rem}
+.hero .fach{margin:0}
+.hero .fach button{border:2px solid rgba(255,255,255,.55);background:rgba(255,255,255,.15);color:#fff;padding:7px 18px}
+.hero .fach button[aria-pressed="true"]{background:#fff;color:#f2522e;border-color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.15)}
+.card{border:none;box-shadow:var(--shadow)}
+.tabs{border:none;border-radius:999px;box-shadow:var(--shadow);padding:5px}
+.tabs button{border-radius:999px;font-weight:700}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff;box-shadow:0 4px 10px rgba(242,96,47,.35)}
+h2{font-weight:800;font-size:1.15rem}
+button.btn{border-radius:999px;font-weight:700;padding:12px 22px;box-shadow:0 6px 14px rgba(242,96,47,.30);border-width:2px}
+button.btn.secondary,button.btn.danger{box-shadow:none;background:var(--card)}
+button.btn.small{padding:7px 14px}
+button.btn:active{transform:translateY(1px)}
+.stat div{border-radius:18px;padding:10px 14px;background:var(--t1)}
+.stat div:nth-child(2){background:var(--t3)} .stat div:nth-child(3){background:var(--t4)} .stat div:nth-child(4){background:var(--t5)} .stat div:nth-child(5){background:var(--t2)}
+.stat b{font-size:1.5rem;font-weight:800}
+.seg label{border-radius:18px;border-color:var(--line)}
+.seg label:has(input:checked){border-color:var(--accent);background:var(--accent-weak);box-shadow:0 4px 12px rgba(242,96,47,.15)}
+input[type=text],input[type=number],select,textarea{border-radius:14px;border:2px solid var(--line);padding:10px 12px}
+.bar{height:12px;background:var(--line)}
+.bar i{background:linear-gradient(90deg,#ffb347,#f2602f);border-radius:99px}
+.badge{background:var(--t2);color:var(--warn);font-weight:700}
+.opts{gap:12px}
+.opt{border-radius:18px;border:2px solid var(--line);padding:13px 14px;font-weight:500;box-shadow:0 3px 8px rgba(242,96,47,.06)}
+.opt .k{border-radius:50%;flex-basis:30px;height:30px;background:var(--t1);border:none;color:var(--accent);font-weight:800}
+.opt.sel .k,.opt.ok .k,.opt.bad .k{color:#fff}
+.fb{border-radius:18px}
+.q{font-size:1.12rem;font-weight:700}
+.dots button{border-radius:50%}
+.topics div,.item{border-radius:14px}
+.topics div{border:none;background:var(--t1)}
+.topics div:nth-child(2n){background:var(--t3)} .topics div:nth-child(3n){background:var(--t4)} .topics div:nth-child(4n){background:var(--t5)}
+.grade{border-radius:999px;padding:5px 16px}
+.score{color:var(--accent)}
+
+/* Themen-Kacheln */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0 6px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;font:inherit;color:var(--text);border:3px solid transparent;border-radius:22px;padding:14px 12px 12px;cursor:pointer;background:var(--t1);min-height:104px;transition:transform .12s,box-shadow .12s}
+.tile:nth-child(6n+2){background:var(--t2)} .tile:nth-child(6n+3){background:var(--t3)} .tile:nth-child(6n+4){background:var(--t4)} .tile:nth-child(6n+5){background:var(--t5)} .tile:nth-child(6n+6){background:var(--t6)}
+.tile .ti{font-size:1.9rem;line-height:1;filter:drop-shadow(0 3px 3px rgba(0,0,0,.12))}
+.tile .tt{font-weight:800;font-size:.9rem;line-height:1.2;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere;max-width:100%}
+.tile .tn{font-size:.76rem;color:var(--muted)}
+.tile[aria-pressed="false"]{opacity:.55;filter:saturate(.6)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 6px 14px rgba(242,96,47,.22)}
+.tile[aria-pressed="true"]:after{content:"✓";position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:.8rem;display:grid;place-items:center}
+.tile:active{transform:scale(.97)}
+
+/* Maskottchen etwas größer und freundlicher */
+.mascot{width:88px}
+.bubble{background:var(--card);box-shadow:0 4px 12px rgba(242,96,47,.15);border:2px solid var(--t1);font-weight:600;border-radius:18px}
+.bubble:before{border-right-color:var(--t1);left:-9px}
+.mrow{margin:0 0 12px}
+#qCount{white-space:nowrap}
+.top .badge{overflow:hidden;text-overflow:ellipsis;max-width:62%}
+.hero .sub{display:none}
+.hero h1{margin-bottom:10px}
+@media (max-width:380px){.tiles{gap:9px}.tile{min-height:96px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Lern-Quiz</h1>
-  <div class="fach" id="fachBar" role="group" aria-label="Fach wählen"></div>
-  <p class="sub" id="fachSub"></p>
+  <header class="hero">
+    <h1>Lern-Quiz</h1>
+    <p class="sub" id="fachSub"></p>
+    <div class="fach" id="fachBar" role="group" aria-label="Fach wählen"></div>
+  </header>
 
   <nav class="tabs" id="tabs" role="tablist">
     <button role="tab" data-tab="practice" aria-selected="true">Üben</button>
@@ -178,7 +252,7 @@ textarea{min-height:64px;resize:vertical}
         <label class="field" id="minWrap"><span>Zeit (Minuten)</span><input type="number" id="minutes" min="1" max="180" value="30"></label>
       </div>
       <h3>Themen</h3>
-      <div class="chips" id="chips"></div>
+      <div class="tiles" id="chips"></div>
       <div class="row" style="margin-top:14px"><button class="btn" id="go" type="button">Test starten</button><span class="hint" id="goInfo" style="margin:0"></span></div>
     </div>
   </section>
@@ -318,6 +392,8 @@ function setFach(id){
   document.title = d.name + " Lern-Quiz";
   renderFachBar();
 }
+const TAG_ICON = {K1:"🛒",K2:"🌍",K3:"📝",K4:"⏰",K5:"🧮",K6:"🏷️",K7:"📊",K8:"📣",K9:"🎤",
+  W1:"🏪",W2:"✍️",W3:"🤝",W4:"🏢",W5:"🔗",W6:"🎓",W7:"💶",W8:"📄",W9:"🛡️",W10:"👥",W11:"⚖️",W12:"🧾",W13:"🗂️",W14:"🧯",TX:"⭐"};
 const MASCOT_SVG = `<svg viewBox="0 0 120 130" aria-hidden="true">
 <g class="tail"><path d="M82 112C112 112 118 70 100 44C94 34 98 22 90 18C80 30 72 40 80 62C84 74 74 86 70 100Z" fill="#e8873a"/><path d="M88 104C106 98 108 70 97 52C94 62 92 74 84 90Z" fill="#f7bd78"/></g>
 <ellipse cx="46" cy="124" rx="9" ry="4.5" fill="#e07a30"/><ellipse cx="74" cy="124" rx="9" ry="4.5" fill="#e07a30"/>
@@ -389,8 +465,8 @@ function renderPractice(){
   const chips=$("chips"); chips.innerHTML="";
   Object.keys(TAGS).forEach(t=>{
     const n = pool.filter(p=>p.tag===t).length; if(!n) return;
-    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.setAttribute("aria-pressed", selTags.has(t));
-    b.innerHTML=esc(TAGS[t])+" <small>("+n+")</small>";
+    const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", selTags.has(t));
+    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^\d+\s*·\s*/,""))+'</span><span class="tn">'+n+' Fragen</span>';
     b.onclick=()=>{ selTags.has(t)?selTags.delete(t):selTags.add(t); renderPractice(); };
     chips.appendChild(b);
   });
