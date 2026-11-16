@@ -232,12 +232,11 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
       <div class="mrow"></div>
       <h2>Dein Stand</h2>
       <div class="stat">
-        <div><b id="stPool">–</b><span>Fragen im Pool</span></div>
-        <div><b id="stSeen">–</b><span>schon gesehen</span></div>
-        <div><b id="stNew">–</b><span>noch neu</span></div>
+        <div><b id="stRate">–</b><span>Trefferquote</span></div>
+        <div><b id="stTests">–</b><span>Tests gemacht</span></div>
       </div>
-      <p class="hint">Neue Tests bevorzugen Fragen, die du noch nicht hattest, danach deine schwächsten. Sind alle durch, startet der Zyklus von vorn.
-        <button class="link" id="resetSeen" type="button">Gesehen-Stand zurücksetzen</button></p>
+      <p class="hint">Neue Tests bringen zuerst Fragen, die du noch nicht richtig hattest. Falsch beantwortete Fragen landen automatisch wieder im Neu-Pool.
+        <button class="link" id="resetSeen" type="button">Fortschritt zurücksetzen (alles wieder neu)</button></p>
     </div>
 
     <div class="card">
@@ -357,7 +356,16 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
 <script>FACH_FILES.forEach(function(f){ document.write('<script src="'+f+'"><\/script>'); });</script>
 <script>
 /* ---------- Fächer ---------- */
-const FACH_IDS = Object.keys(window.FACH_DATA || {});
+const FACH_GROUPS = typeof window.FACH_GROUPS_CFG !== "undefined" ? window.FACH_GROUPS_CFG : (typeof FACH_GROUPS_LIST !== "undefined" ? FACH_GROUPS_LIST : []);
+FACH_GROUPS.forEach(g=>{
+  const tags={}, raw=[];
+  g.members.forEach(m=>{ const d=FACH_DATA[m]; if(!d) return;
+    Object.keys(d.tags).forEach(t=>{ tags[t]=d.name+" · "+d.tags[t].replace(/^\d+\s*·\s*/,""); });
+    d.raw.forEach(r=>raw.push(r)); });
+  FACH_DATA[g.id]={name:g.name,title:g.title,sub:g.sub,tags:tags,raw:raw,members:g.members};
+});
+const GROUPED = new Set([].concat(...FACH_GROUPS.map(g=>g.members)));
+const FACH_IDS = Object.keys(window.FACH_DATA || {}).filter(id=>!GROUPED.has(id));
 let fach = null, TAGS = {}, BUILTIN = [];
 function hid(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return "b"+(h>>>0).toString(36); }
 
@@ -379,8 +387,22 @@ function arm(btn, label, fn){ // Zwei-Schritt-Bestätigung (ohne confirm())
 function flash(id, text, ok){ const m=$(id); m.textContent=text; m.className="msg "+(ok?"ok":"bad"); setTimeout(()=>m.classList.add("hidden"),5000); }
 function pctClass(p){ return p>=75?"":(p>=50?"mid":"low"); }
 
+function migrateGroup(id){ // einmalig: Fortschritt aus WG1/WG2 in den gemeinsamen Pool übernehmen (alte Daten bleiben unangetastet)
+  const d=FACH_DATA[id]; if(!d.members || load(id+"_migrated", false)) return;
+  const seen=new Set(load(id+"_seen_v3",[])), st=load(id+"_stats_v3",{q:{},hist:[]}), cu=load(id+"_custom_v2",[]);
+  d.members.forEach(m=>{
+    load(m+"_seen_v3",[]).forEach(x=>seen.add(x));
+    const o=load(m+"_stats_v3",{q:{},hist:[]});
+    Object.keys(o.q||{}).forEach(k=>{ const a=st.q[k]||(st.q[k]={r:0,w:0}); a.r+=o.q[k].r; a.w+=o.q[k].w; });
+    st.hist=st.hist.concat(o.hist||[]);
+    const known=new Set(cu.map(c=>c.q)); load(m+"_custom_v2",[]).forEach(c=>{ if(!known.has(c.q)) cu.push(c); });
+  });
+  st.hist.sort((a,b)=>b.ts-a.ts); st.hist=st.hist.slice(0,50);
+  save(id+"_seen_v3",[...seen]); save(id+"_stats_v3",st); save(id+"_custom_v2",cu); save(id+"_migrated",true);
+}
 function setFach(id){
-  if(!FACH_DATA[id]) id = FACH_IDS[0];
+  if(!FACH_IDS.includes(id)) id = FACH_IDS[0];
+  migrateGroup(id);
   fach = id; const d = FACH_DATA[id];
   save("quiz_fach", id);
   TAGS = Object.assign({}, d.tags, {TX:"Eigene Fragen"});
@@ -457,16 +479,22 @@ let minutesTouched=false;
 function mode(){ return document.querySelector('input[name=mode]:checked').value; }
 function poolFor(tags){ return allQ().filter(p=>tags.has(p.tag)); }
 function defaultMinutes(n){ return Math.max(1, Math.round(n*1.2)); }
+function tileInfo(t,pool){
+  const m=TAGS[t].match(/^(WG\d+)\s*·/), lab=m?m[1]:"";
+  let r=0,w=0; pool.forEach(p=>{ if(p.tag!==t) return; const x=stats.q[p.id]; if(x){ r+=x.r; w+=x.w; } });
+  return (lab?lab+" · ":"")+((r+w)?Math.round(r/(r+w)*100)+" % richtig":"noch neu");
+}
 function renderPractice(){
   const pool = allQ(), seen = new Set(load(K_SEEN, []));
-  $("stPool").textContent = pool.length; mascot("idle","Bereit zum Lernen? Such dir Kapitel aus und leg los!");
-  $("stSeen").textContent = pool.filter(p=>seen.has(p.id)).length;
-  $("stNew").textContent = pool.filter(p=>!seen.has(p.id)).length;
+  mascot("idle","Bereit zum Lernen? Such dir Kapitel aus und leg los!");
+  const rt = Object.values(stats.q).reduce((a,x)=>[a[0]+x.r,a[1]+x.w],[0,0]);
+  $("stRate").textContent = (rt[0]+rt[1]) ? Math.round(rt[0]/(rt[0]+rt[1])*100)+" %" : "–";
+  $("stTests").textContent = stats.hist.length;
   const chips=$("chips"); chips.innerHTML="";
   Object.keys(TAGS).forEach(t=>{
     const n = pool.filter(p=>p.tag===t).length; if(!n) return;
     const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", selTags.has(t));
-    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^\d+\s*·\s*/,""))+'</span><span class="tn">'+n+' Fragen</span>';
+    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^WG\d+\s*·\s*/,""))+'</span><span class="tn">'+tileInfo(t,pool)+'</span>';
     b.onclick=()=>{ selTags.has(t)?selTags.delete(t):selTags.add(t); renderPractice(); };
     chips.appendChild(b);
   });
@@ -476,7 +504,7 @@ function renderPractice(){
   $("go").disabled = p.length===0;
   $("go").textContent = (mode()==="exam"?"Prüfung starten":"Test starten")+" ("+size+" Fragen)";
   const fresh = p.filter(q=>!seen.has(q.id)).length;
-  $("goInfo").textContent = p.length ? (fresh>=size ? "Alle Fragen neu für dich." : fresh+" neue, Rest nach Schwäche aufgefüllt.") : "Wähle mindestens ein Thema.";
+  $("goInfo").textContent = p.length ? "" : "Wähle mindestens ein Thema.";
 }
 $("size").onchange = ()=>{ minutesTouched=false; renderPractice(); };
 $("minutes").oninput = ()=>{ minutesTouched=true; };
@@ -489,7 +517,8 @@ function pickQuestions(tags, size){
   let seen = new Set(load(K_SEEN, []));
   let fresh = pool.filter(p=>!seen.has(p.id));
   if(!fresh.length){ pool.forEach(p=>seen.delete(p.id)); save(K_SEEN,[...seen]); fresh = pool.slice(); }
-  let chosen = shuffle(fresh).slice(0,size);
+  const wrongFirst = shuffle(fresh.filter(p=>weakness(p.id)>0)).concat(shuffle(fresh.filter(p=>!(weakness(p.id)>0))));
+  let chosen = wrongFirst.slice(0,size);
   if(chosen.length<size){
     const rest = pool.filter(p=>!chosen.includes(p)).map(p=>({p, s:weakness(p.id)+Math.random()*0.3})).sort((a,b)=>b.s-a.s).map(x=>x.p);
     chosen = chosen.concat(rest.slice(0,size-chosen.length));
@@ -503,7 +532,6 @@ let test=null, tick=null;
 const LET=["A","B","C","D"];
 function startTest(questions, m, minutes){
   if(!questions.length) return;
-  const seen=new Set(load(K_SEEN,[])); questions.forEach(p=>seen.add(p.id)); save(K_SEEN,[...seen]);
   test={ mode:m, idx:0, items:questions.map(p=>({p,opts:shuffle([p.correct,...p.wrong]),answer:null})), end:0, confirmSubmit:false, streak:0 };
   clearInterval(tick);
   $("tabs").classList.add("hidden"); showSection("test");
@@ -553,10 +581,16 @@ function renderQ(){
     });
   }
 }
+function updateSeen(items){ // richtig → gesehen; falsch/offen → bleibt bzw. kommt zurück in den Neu-Pool
+  const seen=new Set(load(K_SEEN,[]));
+  items.forEach(it=>{ if(it.answer===null) return; if(it.opts[it.answer]===it.p.correct) seen.add(it.p.id); else seen.delete(it.p.id); });
+  save(K_SEEN,[...seen]);
+}
 function choose(i){
   const it=test.items[test.idx];
   if(test.mode!=="exam" && it.answer!==null) return;
   it.answer=i; test.confirmSubmit=false; renderQ();
+  if(test.mode!=="exam") updateSeen([it]);
   if(test.mode!=="exam"){
     if(isRight(it)){ test.streak++; mascot("happy", test.streak>=3 ? test.streak+" in Folge! 🔥" : pickSay(SAY.ok), true); }
     else { test.streak=0; mascot("sad", pickSay(SAY.bad), true); }
@@ -587,6 +621,7 @@ function finish(timeUp){
   // Statistik schreiben (nur beantwortete Fragen)
   const per={}; test.items.forEach(it=>{ const t=it.p.tag; per[t]=per[t]||{ok:0,n:0}; per[t].n++; if(isRight(it)) per[t].ok++;
     if(it.answer!==null){ const s=stats.q[it.p.id]||(stats.q[it.p.id]={r:0,w:0}); if(isRight(it)) s.r++; else s.w++; } });
+  updateSeen(test.items);
   stats.hist.unshift({ts:Date.now(), mode:test.mode, ok, n, pct}); stats.hist=stats.hist.slice(0,50);
   save(K_STATS, stats);
   $("rTitle").textContent = exam ? (timeUp?"Prüfung – Zeit abgelaufen":"Prüfung – Ergebnis") : "Ergebnis";
