@@ -1,7 +1,7 @@
 // Liste der Fächer. Neues Fach = neue Datei data-<fach>.js anlegen und hier eintragen.
 // APP_VERSION bei jeder Änderung an Fragen oder App erhöhen (sorgt für Update bei installierten Apps).
-const APP_VERSION = 6;
-const FACH_FILES = ["data-wg1.js", "data-wg2.js"];
+const APP_VERSION = 7;
+const FACH_FILES = ["data-wg1.js", "data-wg2.js", "data-nw.js", "data-hw.js", "data-ssq.js"];
 // Gruppen: mehrere Fächer werden in der App zu EINEM gemeinsamen Pool zusammengefasst.
 // (Fächer, die hier nicht stehen, erscheinen einzeln als Auswahl oben.)
 const FACH_GROUPS_LIST = [

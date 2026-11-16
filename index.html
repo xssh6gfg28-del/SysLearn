@@ -415,6 +415,9 @@ function setFach(id){
   renderFachBar();
 }
 const TAG_ICON = {K1:"🛒",K2:"🌍",K3:"📝",K4:"⏰",K5:"🧮",K6:"🏷️",K7:"📊",K8:"📣",K9:"🎤",
+  N1:"📖",N2:"🧱",N3:"🔌",N4:"📶",N5:"🔢",N6:"📡",N7:"🌐",N8:"💬",N9:"🧭",N10:"🏷️",N11:"🔐",N12:"☎️",
+  H1:"🖥️",H2:"🪑",H3:"🔟",H4:"📥",H5:"⚡",H6:"🔋",H7:"🌱",H8:"♻️",H9:"💾",H10:"🗄️",
+  S1:"✅",S2:"🔄",S3:"🗺️",S4:"🔎",S5:"🗣️",S6:"🎧",S7:"🎫",S8:"🛠️",
   W1:"🏪",W2:"✍️",W3:"🤝",W4:"🏢",W5:"🔗",W6:"🎓",W7:"💶",W8:"📄",W9:"🛡️",W10:"👥",W11:"⚖️",W12:"🧾",W13:"🗂️",W14:"🧯",TX:"⭐"};
 const MASCOT_SVG = `<svg viewBox="0 0 120 130" aria-hidden="true">
 <g class="tail"><path d="M82 112C112 112 118 70 100 44C94 34 98 22 90 18C80 30 72 40 80 62C84 74 74 86 70 100Z" fill="#e8873a"/><path d="M88 104C106 98 108 70 97 52C94 62 92 74 84 90Z" fill="#f7bd78"/></g>
@@ -494,7 +497,7 @@ function renderPractice(){
   Object.keys(TAGS).forEach(t=>{
     const n = pool.filter(p=>p.tag===t).length; if(!n) return;
     const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", selTags.has(t));
-    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^WG\d+\s*·\s*/,""))+'</span><span class="tn">'+tileInfo(t,pool)+'</span>';
+    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^(WG)?\d+\s*·\s*/,""))+'</span><span class="tn">'+tileInfo(t,pool)+'</span>';
     b.onclick=()=>{ selTags.has(t)?selTags.delete(t):selTags.add(t); renderPractice(); };
     chips.appendChild(b);
   });
