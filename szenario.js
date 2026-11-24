@@ -115,7 +115,7 @@ function renderCard(){
     <div class="top"><span>Fall ${sz.idx + 1} / ${sz.items.length}</span><span class="badge">${esc(d.t)}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
     ${msgHtml}
-    <div class="srow"><div class="mascot" id="szM" data-mood="idle" role="img" aria-label="Eichhörnchen">${MASCOT_SVG}</div>
+    <div class="srow"><div class="mascot" id="szM" data-mood="think" role="img" aria-label="Eichhörnchen">${MASCOT_SVG}</div>
       <div class="bubble long"><div><b style="display:block;margin-bottom:4px">${esc(d.h)}</b><span class="szf" style="margin:0">${esc(d.f)}</span></div></div></div>
     <p class="sza"><b>Aufgabe:</b> ${esc(d.a)}</p>
     <textarea class="szans" id="szAns" placeholder="Schreib deine Antwort in eigenen Worten. Ganze Sätze, so wie in der Prüfung." aria-label="Deine Antwort"></textarea>
@@ -174,7 +174,7 @@ function suggest(){
   else if(k === "part") txt = "Fast! " + n + " von " + boxes.length + " Punkten. Es fehlen noch: " + miss.join("; ") + ".";
   else txt = n + " von " + boxes.length + " Punkten, das war noch dünn. Lies die Musterantwort in Ruhe und merk dir besonders: " + miss.slice(0, 3).join("; ") + ".";
   $("szFbT").textContent = txt;
-  $("szFbM").dataset.mood = k === "ok" ? "happy" : k === "part" ? "idle" : "sad";
+  $("szFbM").dataset.mood = k === "ok" ? "happy" : k === "part" ? "wow" : "sad";
 }
 
 function rateIt(d, k){
@@ -194,7 +194,7 @@ function renderEnd(){
     ${open.length ? '<h3>Nochmal anschauen</h3><ul class="szlist">' + open.map(d => "<li>" + esc(d.h) + "</li>").join("") + "</ul>" : ""}
     <div class="row" style="margin-top:14px"><button class="btn" id="szAgain" type="button">Nächste Runde</button>
       <button class="btn secondary" id="szHome" type="button">Startseite</button></div></div>`;
-  initMascot(); mascot(c.ok === sz.items.length ? "happy" : "idle", c.ok === sz.items.length ? "Alles gewusst! Stark!" : "Die offenen Fälle kommen bald wieder.", c.ok === sz.items.length);
+  initMascot(); mascot(c.ok === sz.items.length ? "cheer" : "idle", c.ok === sz.items.length ? "Alles gewusst! Stark!" : "Die offenen Fälle kommen bald wieder.", c.ok === sz.items.length);
   window.scrollTo(0, 0);
   $("szAgain").onclick = () => { sz = null; render(); $("szGo").click(); };
   $("szHome").onclick = () => { sz = null; render(); };

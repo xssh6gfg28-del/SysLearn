@@ -133,25 +133,21 @@ textarea{min-height:64px;resize:vertical}
 /* ---------- Maskottchen ---------- */
 .mrow{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
 .mascot{flex:0 0 auto;width:76px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
-.mascot svg{width:100%;height:auto;display:block;overflow:visible}
-.mascot .tail{transform-origin:82px 112px;animation:wag 3.2s ease-in-out infinite}
-.mascot .eo{transform-origin:60px 48px;animation:blink 4.5s infinite}
-.mascot .eh,.mascot .es,.mascot .m-open,.mascot .m-sad{display:none}
-.mascot[data-mood=happy] .eo,.mascot[data-mood=cheer] .eo,.mascot[data-mood=sad] .eo{display:none}
-.mascot[data-mood=happy] .eh,.mascot[data-mood=cheer] .eh{display:inline}
-.mascot[data-mood=happy] .m-smile,.mascot[data-mood=cheer] .m-smile,.mascot[data-mood=sad] .m-smile{display:none}
-.mascot[data-mood=happy] .m-open,.mascot[data-mood=cheer] .m-open{display:inline}
-.mascot[data-mood=sad] .es,.mascot[data-mood=sad] .m-sad{display:inline}
-.mascot[data-mood=sad] svg{transform:rotate(-4deg) translateY(3px)}
-.mascot.jump svg{animation:hop .6s ease}
-.mascot[data-mood=cheer] .tail{animation:wag .5s ease-in-out infinite}
-.mascot[data-mood=cheer] svg{animation:hop .7s ease infinite}
+.mascot .mi{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none;transform-origin:50% 100%}
+.mascot .mi-s,.mascot .mi-c,.mascot .mi-t,.mascot .mi-w{display:none}
+.mascot[data-mood=sad] .mi-h,.mascot[data-mood=cheer] .mi-h,.mascot[data-mood=think] .mi-h,.mascot[data-mood=wow] .mi-h{display:none}
+.mascot[data-mood=sad] .mi-s,.mascot[data-mood=cheer] .mi-c,.mascot[data-mood=think] .mi-t,.mascot[data-mood=wow] .mi-w{display:block}
+.mascot[data-mood=idle] .mi,.mascot[data-mood=think] .mi,.mascot[data-mood=wow] .mi{animation:breathe 4s ease-in-out infinite}
+.mascot[data-mood=sad] .mi{transform:rotate(-2deg)}
+.mascot.jump .mi{animation:hop .6s ease}
+.mascot[data-mood=cheer] .mi{animation:hop .7s ease infinite}
 .bubble{position:relative;background:var(--accent-weak);border-radius:14px;padding:8px 12px;font-size:.92rem;line-height:1.35;min-height:38px;display:flex;align-items:center}
 .bubble:before{content:"";position:absolute;left:-7px;top:50%;margin-top:-7px;border:7px solid transparent;border-left:0;border-right-color:var(--accent-weak)}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.03)}}
 @keyframes wag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
 @keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-14px) scale(1.04,.97)}65%{transform:translateY(0) scale(1.03,.96)}}
-@media (prefers-reduced-motion:reduce){.mascot .tail,.mascot .eo,.mascot[data-mood=cheer] svg,.mascot[data-mood=cheer] .tail{animation:none}}
+@media (prefers-reduced-motion:reduce){.mascot .mi,.mascot[data-mood=cheer] .mi{animation:none}}
 
 /* ---------- Warmes Design ---------- */
 body{font-family:ui-rounded,"SF Pro Rounded","Nunito","Quicksand","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;position:relative}
@@ -211,7 +207,7 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
 .tile:active{transform:scale(.97)}
 
 /* Maskottchen etwas größer und freundlicher */
-.mascot{width:88px}
+.mascot{width:104px}
 .bubble{background:var(--card);box-shadow:0 4px 12px rgba(242,96,47,.15);border:2px solid var(--t1);font-weight:600;border-radius:18px}
 .bubble:before{border-right-color:var(--t1);left:-9px}
 .mrow{margin:0 0 12px}
@@ -287,7 +283,7 @@ html[data-theme=dark] .tile .ti{filter:none}
   #test,#result{max-width:920px}
   .q{font-size:1.25rem}
   .opt{font-size:1.02rem}
-  .mascot{width:96px}
+  .mascot{width:132px}
 }
 @media (min-width:1500px){
   body{font-size:17px}
@@ -476,27 +472,7 @@ const TAG_ICON = {K1:"🛒",K2:"🌍",K3:"📝",K4:"⏰",K5:"🧮",K6:"🏷️",
   H1:"🖥️",H2:"🪑",H3:"🔟",H4:"📥",H5:"⚡",H6:"🔋",H7:"🌱",H8:"♻️",H9:"💾",H10:"🗄️",
   S1:"✅",S2:"🔄",S3:"🗺️",S4:"🔎",S5:"🗣️",S6:"🎧",S7:"🎫",S8:"🛠️",
   W1:"🏪",W2:"✍️",W3:"🤝",W4:"🏢",W5:"🔗",W6:"🎓",W7:"💶",W8:"📄",W9:"🛡️",W10:"👥",W11:"⚖️",W12:"🧾",W13:"🗂️",W14:"🧯",TX:"⭐"};
-const MASCOT_SVG = `<svg viewBox="0 0 120 130" aria-hidden="true">
-<g class="tail"><path d="M82 112C112 112 118 70 100 44C94 34 98 22 90 18C80 30 72 40 80 62C84 74 74 86 70 100Z" fill="#e8873a"/><path d="M88 104C106 98 108 70 97 52C94 62 92 74 84 90Z" fill="#f7bd78"/></g>
-<ellipse cx="46" cy="124" rx="9" ry="4.5" fill="#e07a30"/><ellipse cx="74" cy="124" rx="9" ry="4.5" fill="#e07a30"/>
-<ellipse cx="60" cy="98" rx="27" ry="28" fill="#f09a4a"/><ellipse cx="60" cy="106" rx="16" ry="18" fill="#f8e6cc"/>
-<path d="M32 34L36 8L52 26Z" fill="#f09a4a"/><path d="M37 28L38 15L47 25Z" fill="#f7b5b5"/>
-<path d="M88 34L84 8L68 26Z" fill="#f09a4a"/><path d="M83 28L82 15L73 25Z" fill="#f7b5b5"/>
-<ellipse cx="60" cy="50" rx="35" ry="29" fill="#f09a4a"/>
-<ellipse cx="40" cy="62" rx="15" ry="11" fill="#fff6e8"/><ellipse cx="80" cy="62" rx="15" ry="11" fill="#fff6e8"/><ellipse cx="60" cy="63" rx="11" ry="8" fill="#fff6e8"/>
-<circle cx="32" cy="60" r="4" fill="#f7a1a1" opacity=".75"/><circle cx="88" cy="60" r="4" fill="#f7a1a1" opacity=".75"/>
-<g class="eo"><ellipse cx="45" cy="48" rx="7.5" ry="9" fill="#2a1b2e"/><circle cx="42.5" cy="44" r="3" fill="#fff"/><circle cx="47.5" cy="52" r="1.5" fill="#fff"/>
-<ellipse cx="75" cy="48" rx="7.5" ry="9" fill="#2a1b2e"/><circle cx="72.5" cy="44" r="3" fill="#fff"/><circle cx="77.5" cy="52" r="1.5" fill="#fff"/></g>
-<g class="eh" fill="none" stroke="#2a1b2e" stroke-width="3.6" stroke-linecap="round"><path d="M38 51Q45 41 52 51"/><path d="M68 51Q75 41 82 51"/></g>
-<g class="es"><ellipse cx="45" cy="50" rx="7.5" ry="8.5" fill="#2a1b2e"/><circle cx="42.5" cy="46" r="3" fill="#fff"/><ellipse cx="75" cy="50" rx="7.5" ry="8.5" fill="#2a1b2e"/><circle cx="72.5" cy="46" r="3" fill="#fff"/>
-<path d="M37 40L52 35M68 35L83 40" stroke="#6b3a2a" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M36 58q-3.5 6 0 9q3.5-3 0-9Z" fill="#7cc4f5"/></g>
-<ellipse cx="60" cy="58" rx="3.5" ry="2.6" fill="#6b3a2a"/>
-<path class="m-smile" d="M53 65Q60 72 67 65" stroke="#6b3a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-<g class="m-open"><path d="M52 64Q60 80 68 64Z" fill="#8b2f3a"/><path d="M56 71Q60 76 64 71Q60 69 56 71Z" fill="#f08a8a"/></g>
-<path class="m-sad" d="M54 70Q60 63 66 70" stroke="#6b3a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-<g><ellipse cx="60" cy="97" rx="8" ry="9" fill="#a8734a"/><path d="M51 94Q60 82 69 94Z" fill="#6e4a30"/><rect x="58.8" y="80" width="2.4" height="5" rx="1" fill="#6e4a30"/>
-<ellipse cx="50" cy="96" rx="5" ry="4" fill="#f09a4a"/><ellipse cx="70" cy="96" rx="5" ry="4" fill="#f09a4a"/></g>
-</svg>`;
+const MASCOT_SVG = `<img class="mi mi-h" src="sq-happy.webp" alt="" draggable="false"><img class="mi mi-s" src="sq-sad.webp" alt="" draggable="false"><img class="mi mi-c" src="sq-cheer.webp" alt="" draggable="false"><img class="mi mi-t" src="sq-think.webp" alt="" draggable="false"><img class="mi mi-w" src="sq-wow.webp" alt="" draggable="false">`;
 const SAY = {
   ok:["Richtig! 🌰","Nuss geknackt!","Stark, weiter so!","Sauber gelöst!","Das sitzt!"],
   bad:["Nicht schlimm – merk dir die Erklärung.","Das kommt noch!","Aus Fehlern wird man schlau.","Knapp daneben, weiter geht's."],
@@ -628,7 +604,7 @@ function renderQ(){
     const right=it.opts[it.answer]===it.p.correct;
     fb.className="fb "+(right?"ok":"bad");
     fb.innerHTML="<b>"+(right?"Richtig!":"Leider falsch.")+"</b>"+(right?"":"Richtig wäre: "+esc(it.p.correct)+"<br>")+esc(it.p.exp||"");
-  } else { fb.className="fb hidden"; mascot("idle", pickSay(exam?SAY.exam:SAY.ask)); }
+  } else { fb.className="fb hidden"; mascot("think", pickSay(exam?SAY.exam:SAY.ask)); }
   $("prev").disabled=test.idx===0;
   const last=test.idx===n-1;
   $("next").textContent = last ? (exam?"Abgeben ✓":"Auswerten ✓") : "Weiter →";
