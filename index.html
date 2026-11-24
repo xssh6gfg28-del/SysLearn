@@ -328,12 +328,18 @@ html[data-theme=dark] .tile .ti{filter:none}
       </div>
       <div class="inline">
         <label class="field"><span>Anzahl Fragen</span>
-          <select id="size"><option>10</option><option selected>25</option><option>40</option><option>60</option><option>100</option></select></label>
+          <select id="size"><option>10</option><option selected>25</option><option>40</option><option>60</option><option>100</option><option>200</option></select></label>
         <label class="field" id="minWrap"><span>Zeit (Minuten)</span><input type="number" id="minutes" min="1" max="180" value="30"></label>
       </div>
       <h3>Themen</h3>
       <div class="tiles" id="chips"></div>
       <div class="row" style="margin-top:14px"><button class="btn" id="go" type="button">Test starten</button><span class="hint" id="goInfo" style="margin:0"></span></div>
+    </div>
+    <div class="card" id="mixCard">
+      <h2>🎲 Zufalls-Mix</h2>
+      <p class="hint" style="margin-top:0">Mehrere Fächer gleichzeitig üben oder wiederholen. Die Fragen werden quer gemischt. Anzahl und Modus (Lernen/Prüfung) nimmt er von oben.</p>
+      <div class="tiles" id="mixChips"></div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="goMix" type="button">Mix starten</button><span class="hint" id="mixInfo" style="margin:0"></span></div>
     </div>
   </section>
 
@@ -522,6 +528,7 @@ function tileInfo(t,pool){
   return (lab?lab+" · ":"")+((r+w)?Math.round(r/(r+w)*100)+" % richtig":"noch neu");
 }
 function renderPractice(){
+  TAGS = Object.assign({}, FACH_DATA[fach].tags); renderMix();
   const pool = allQ(), seen = new Set(load(K_SEEN, []));
   mascot("idle","Bereit zum Lernen? Such dir Kapitel aus und leg los!");
   const rt = Object.values(stats.q).reduce((a,x)=>[a[0]+x.r,a[1]+x.w],[0,0]);
@@ -564,12 +571,40 @@ function pickQuestions(tags, size){
 }
 $("go").onclick = ()=> startTest(pickQuestions(selTags, +$("size").value), mode(), mode()==="exam" ? Math.max(1,+$("minutes").value||defaultMinutes(+$("size").value)) : 0);
 
+/* ---------- ZUFALLS-MIX (mehrere Fächer) ---------- */
+let mixSel = new Set(load("mix_sel", FACH_IDS)); let mixStats = {};
+function statsFor(it){ if(!test.mix) return stats; const f=it.p.f; return mixStats[f]||(mixStats[f]=load(f+"_stats_v3",{q:{},hist:[]})); }
+function mixPool(){
+  const out=[]; FACH_IDS.forEach(f=>{ if(!mixSel.has(f)) return; migrateGroup(f); const d=FACH_DATA[f];
+    d.raw.forEach(r=>out.push({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6], f:f})); });
+  return out;
+}
+function renderMix(){
+  const box=$("mixChips"); if(!box) return; box.innerHTML="";
+  FACH_IDS.forEach(f=>{
+    const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", mixSel.has(f));
+    b.innerHTML='<span class="tt">'+esc(FACH_DATA[f].name)+'</span><span class="tn">'+FACH_DATA[f].raw.length+' Fragen</span>';
+    b.onclick=()=>{ mixSel.has(f)?mixSel.delete(f):mixSel.add(f); save("mix_sel",[...mixSel]); renderMix(); };
+    box.appendChild(b);
+  });
+  const n=mixPool().length, size=Math.min(+$("size").value, n);
+  $("goMix").disabled = n===0;
+  $("goMix").textContent = (mode()==="exam"?"Mix-Prüfung starten":"Mix starten")+" ("+size+" Fragen)";
+  $("mixInfo").textContent = n ? "" : "Wähle mindestens ein Fach.";
+}
+$("goMix").onclick = ()=>{
+  const pool=mixPool(), size=Math.min(+$("size").value, pool.length); if(!size) return;
+  const merged={}; FACH_IDS.forEach(f=>{ if(mixSel.has(f)){ const d=FACH_DATA[f]; Object.keys(d.tags).forEach(t=>{ merged[t]=d.name+" · "+d.tags[t].replace(/^(WG)?\d+\s*·\s*/,""); }); } });
+  TAGS = merged; mixStats = {};
+  startTest(shuffle(pool).slice(0,size), mode(), mode()==="exam" ? Math.max(1,+$("minutes").value||defaultMinutes(size)) : 0, true);
+};
+
 /* ---------- TEST ---------- */
 let test=null, tick=null;
 const LET=["A","B","C","D"];
-function startTest(questions, m, minutes){
+function startTest(questions, m, minutes, mix){
   if(!questions.length) return;
-  test={ mode:m, idx:0, items:questions.map(p=>({p,opts:shuffle([p.correct,...p.wrong]),answer:null})), end:0, confirmSubmit:false, streak:0 };
+  test={ mix:!!mix, mode:m, idx:0, items:questions.map(p=>({p,opts:shuffle([p.correct,...p.wrong]),answer:null})), end:0, confirmSubmit:false, streak:0 };
   clearInterval(tick);
   $("tabs").classList.add("hidden"); showSection("test");
   const exam = m==="exam";
@@ -657,10 +692,12 @@ function finish(timeUp){
   const n=test.items.length, ok=test.items.filter(isRight).length, pct=Math.round(ok/n*100), exam=test.mode==="exam";
   // Statistik schreiben (nur beantwortete Fragen)
   const per={}; test.items.forEach(it=>{ const t=it.p.tag; per[t]=per[t]||{ok:0,n:0}; per[t].n++; if(isRight(it)) per[t].ok++;
-    if(it.answer!==null){ const s=stats.q[it.p.id]||(stats.q[it.p.id]={r:0,w:0}); if(isRight(it)) s.r++; else s.w++; } });
+    if(it.answer!==null){ const st=statsFor(it), s=st.q[it.p.id]||(st.q[it.p.id]={r:0,w:0}); if(isRight(it)) s.r++; else s.w++; } });
+  if(test.mix){ Object.keys(mixStats).forEach(f=>save(f+"_stats_v3", mixStats[f])); stats = load(K_STATS, {q:{}, hist:[]}); }
+  else {
   updateSeen(test.items);
   stats.hist.unshift({ts:Date.now(), mode:test.mode, ok, n, pct}); stats.hist=stats.hist.slice(0,50);
-  save(K_STATS, stats);
+  save(K_STATS, stats); }
   $("rTitle").textContent = exam ? (timeUp?"Prüfung – Zeit abgelaufen":"Prüfung – Ergebnis") : "Ergebnis";
   $("rScore").textContent = ok+" / "+n+"  ("+pct+" %)";
   const g=$("rGrade"); g.classList.toggle("hidden", !exam);
@@ -688,7 +725,7 @@ function renderReview(){
 }
 $("onlyWrong").onchange=renderReview;
 $("again").onclick=()=>{ const m=test.mode, n=test.items.length, mins=m==="exam"?Math.max(1,+$("minutes").value||defaultMinutes(n)):0; startTest(pickQuestions(selTags,n), m, mins); };
-$("redo").onclick=()=>{ const w=test.items.filter(it=>!isRight(it)).map(it=>it.p); if(w.length) startTest(shuffle(w), "learn", 0); };
+$("redo").onclick=()=>{ const w=test.items.filter(it=>!isRight(it)).map(it=>it.p); if(w.length) startTest(shuffle(w), "learn", 0, test.mix); };
 $("home").onclick=()=>{ test=null; setTab("practice"); };
 
 /* ---------- STATISTIK ---------- */
