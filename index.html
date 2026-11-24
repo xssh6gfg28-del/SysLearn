@@ -216,6 +216,15 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
 .hero .sub{display:none}
 .hero h1{margin-bottom:10px}
 @media (max-width:380px){.tiles{gap:9px}.tile{min-height:96px}}
+#mixCard{grid-column:1/-1}
+#mixChips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+#mixChips .tile{flex-direction:row;align-items:center;gap:8px;min-height:0;padding:9px 16px;border-width:2px;border-radius:999px;width:auto}
+#mixChips .tile .tt{font-size:.92rem}
+#mixChips .tile .tn{font-size:.78rem;opacity:.75}
+#mixChips .tile[aria-pressed="true"]:after{position:static;width:20px;height:20px;flex:none}
+#mixChips .tile{flex-direction:row;justify-content:flex-start}
+#mixChips .tile:after{order:-1}
+
 
 /* ---------- Pastell, Theme, Coach, Desktop-Layout (v9) ---------- */
 .hero{background:linear-gradient(135deg,var(--hero1),var(--hero2));color:var(--text);box-shadow:var(--shadow)}
