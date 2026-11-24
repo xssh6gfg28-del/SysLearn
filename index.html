@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#ffdcc8">
 <script>try{var __t=JSON.parse(localStorage.getItem("quiz_theme"));document.documentElement.dataset.theme=(__t==="dark"||__t==="auto")?__t:"light";}catch(e){document.documentElement.dataset.theme="light";}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Lern-Quiz">
+<meta name="apple-mobile-web-app-title" content="SysLearn">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
-<title>Lern-Quiz</title>
+<title>SysLearn</title>
 <style>
 :root{
   --bg:#fdf6f0; --card:#ffffff; --text:#4a3b36; --muted:#86736b; --line:#f1e3d9;
@@ -295,7 +295,7 @@ html[data-theme=dark] .tile .ti{filter:none}
 <body>
 <div class="wrap">
   <header class="hero">
-    <h1>Lern-Quiz</h1>
+    <h1>SysLearn</h1>
     <p class="sub" id="fachSub"></p>
     <div class="fach" id="fachBar" role="group" aria-label="Fach wählen"></div>
     <div class="themebar" id="themeBar" role="group" aria-label="Darstellung"></div>
@@ -470,7 +470,7 @@ function setFach(id){
   custom = []; stats = load(K_STATS, {q:{}, hist:[]});
   selTags.clear(); Object.keys(TAGS).forEach(t=>selTags.add(t));
   $("fachSub").textContent = d.title + (d.sub ? " · " + d.sub : "");
-  document.title = d.name + " Lern-Quiz";
+  document.title = d.name + " SysLearn";
   renderFachBar();
 }
 const TAG_ICON = {K1:"🛒",K2:"🌍",K3:"📝",K4:"⏰",K5:"🧮",K6:"🏷️",K7:"📊",K8:"📣",K9:"🎤",

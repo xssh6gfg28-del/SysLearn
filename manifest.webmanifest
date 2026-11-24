@@ -1,7 +1,7 @@
 {
-  "name": "Lern-Quiz",
-  "short_name": "Lern-Quiz",
-  "description": "Lern-Quiz für die Umschulung (Fachinformatiker): WG1, WG2 und weitere Fächer",
+  "name": "SysLearn",
+  "short_name": "SysLearn",
+  "description": "Lernplattform für Systemadministratoren: Netzwerke, Hardware, Service, Wirtschaft und mehr",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

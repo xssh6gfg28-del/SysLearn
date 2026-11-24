@@ -1,4 +1,4 @@
-# Lern-Quiz (PWA)
+# SysLearn (PWA)
 
 Fächer: Wirtschaft (WG1+WG2), Netzwerke, Hardware, Service & QM. Pro Fach zwei Karteien: Multiple Choice und Szenario. Eichhörnchen-Coach (coach.js, Bilder Posen sq-happy/sad/cheer/think/wow.webp): Tagesziel, Serie, Nüsse, Schwächen-Tipp. Darstellung: Hell, Dunkel, Auto.
 
