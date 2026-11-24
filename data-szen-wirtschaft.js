@@ -29,7 +29,7 @@ SZEN_DATA.wirtschaft = [
  p:[["Lieferverzug: Termin war kalendermäßig bestimmt, Verzug ohne Mahnung",["verzug","kalender"]],
     ["Verschulden des Lieferanten ist Voraussetzung",["verschulden","vertreten"]],
     ["Angemessene Nachfrist setzen",["nachfrist","frist"]],
-    ["Rücktritt vom Vertrag möglich",["rücktritt"]],
+    ["Rücktritt vom Vertrag möglich",["rücktritt","zurücktret"]],
     ["Schadensersatz (z. B. Deckungskauf, Mehrkosten)",["schadensersatz","deckungskauf","mehrkosten"]],
     ["Alternativ weiter auf Lieferung bestehen",["bestehen","erfüllung","lieferung verlangen"]]]},
 

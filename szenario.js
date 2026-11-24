@@ -5,6 +5,10 @@ const css = `
 .kartei{display:flex;gap:8px;margin:12px 0 0}
 .kartei button{flex:1;font:inherit;font-weight:700;font-size:.9rem;border:2px solid var(--line);background:var(--card);color:var(--muted);padding:8px 10px;border-radius:14px;cursor:pointer}
 .kartei button[aria-pressed="true"]{background:var(--accent-weak);color:var(--accent);border-color:var(--accent)}
+.hero .fach .kartei{display:flex;flex-direction:row;gap:6px;flex:0 0 calc(100% - 10px);width:calc(100% - 10px);margin:0 0 4px 10px;padding-left:6px;border-left:3px solid rgba(255,255,255,.8)}
+.hero .fach .kartei.hidden{display:none}
+html body .hero .fach .kartei button{flex:1;font-size:.78rem;padding:7px 4px;white-space:nowrap;text-align:center;background:transparent;color:var(--muted);border:2px solid var(--line);box-shadow:none}
+html body .hero .fach .kartei button[aria-pressed="true"]{background:var(--card);color:var(--accent);border-color:var(--accent);box-shadow:none}
 #szen .szh{margin:10px 0 6px;font-size:1.12rem}
 #szen .szf{line-height:1.55;margin:0 0 10px;white-space:pre-line}
 #szen .sza{background:var(--accent-weak);border-radius:12px;padding:10px 12px;margin:0 0 12px;line-height:1.5}
@@ -37,11 +41,15 @@ const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "
 /* ---------- Umschalter MC / Szenario ---------- */
 const bar = document.createElement("div"); bar.className = "kartei"; bar.id = "karteiBar";
 bar.setAttribute("role", "group"); bar.setAttribute("aria-label", "Kartei wählen");
-$("fachBar").after(bar);
 const sec = document.createElement("section"); sec.id = "szen"; sec.className = "hidden";
 document.querySelector(".wrap").appendChild(sec);
 
+function placeBar(){
+  const fb = $("fachBar"), act = fb.querySelector(":scope > button[aria-pressed=\"true\"]");
+  if(act) act.after(bar); else fb.appendChild(bar);
+}
 function renderBar(){
+  placeBar();
   const has = data().length > 0;
   if(!has && kartei === "szen") kartei = "mc";
   bar.classList.toggle("hidden", !has);
