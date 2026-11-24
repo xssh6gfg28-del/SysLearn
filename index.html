@@ -216,14 +216,15 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
 .hero .sub{display:none}
 .hero h1{margin-bottom:10px}
 @media (max-width:380px){.tiles{gap:9px}.tile{min-height:96px}}
-#mixCard{grid-column:1/-1}
-#mixChips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
-#mixChips .tile{flex-direction:row;align-items:center;gap:8px;min-height:0;padding:9px 16px;border-width:2px;border-radius:999px;width:auto}
-#mixChips .tile .tt{font-size:.92rem}
-#mixChips .tile .tn{font-size:.78rem;opacity:.75}
-#mixChips .tile[aria-pressed="true"]:after{position:static;width:20px;height:20px;flex:none}
-#mixChips .tile{flex-direction:row;justify-content:flex-start}
-#mixChips .tile:after{order:-1}
+.fold{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
+.fold::before{content:"▾";display:inline-block;transition:transform .2s;color:var(--muted)}
+.fold.zu::before{transform:rotate(-90deg)}
+.gh{margin:12px 0 2px;font-size:.95rem}
+.fold small{margin-left:auto;font-weight:500;color:var(--muted);font-size:.8rem}
+.examlist{display:grid;gap:10px;margin-top:10px}
+.exam{border:2px solid var(--line);border-radius:18px;padding:12px 14px;background:var(--card);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.exam b{font-size:1rem}
+.exam span{font-size:.85rem;color:var(--muted)}
 
 
 /* ---------- Pastell, Theme, Coach, Desktop-Layout (v9) ---------- */
@@ -320,6 +321,7 @@ html[data-theme=dark] .tile .ti{filter:none}
     <div class="card">
       <div class="mrow"></div>
       <div id="coachArea"></div>
+      <div id="standBox">
       <h2>Dein Stand</h2>
       <div class="stat">
         <div><b id="stRate">–</b><span>Trefferquote</span></div>
@@ -327,6 +329,7 @@ html[data-theme=dark] .tile .ti{filter:none}
       </div>
       <p class="hint">Neue Tests bringen zuerst Fragen, die du noch nicht richtig hattest. Falsch beantwortete Fragen landen automatisch wieder im Neu-Pool.
         <button class="link" id="resetSeen" type="button">Fortschritt zurücksetzen (alles wieder neu)</button></p>
+      </div>
     </div>
 
     <div class="card">
@@ -335,20 +338,20 @@ html[data-theme=dark] .tile .ti{filter:none}
         <label><input type="radio" name="mode" value="learn" checked><b>Lernen</b><small>Sofort-Feedback + Erklärung</small></label>
         <label><input type="radio" name="mode" value="exam"><b>Prüfung</b><small>Timer, Note, Auswertung am Ende</small></label>
       </div>
-      <div class="inline">
+      <div class="inline" id="inlineRow">
         <label class="field"><span>Anzahl Fragen</span>
           <select id="size"><option>10</option><option selected>25</option><option>40</option><option>60</option><option>100</option><option>200</option></select></label>
         <label class="field" id="minWrap"><span>Zeit (Minuten)</span><input type="number" id="minutes" min="1" max="180" value="30"></label>
       </div>
-      <h3>Themen</h3>
-      <div class="tiles" id="chips"></div>
-      <div class="row" style="margin-top:14px"><button class="btn" id="go" type="button">Test starten</button><span class="hint" id="goInfo" style="margin:0"></span></div>
-    </div>
-    <div class="card" id="mixCard">
-      <h2>🎲 Zufalls-Mix</h2>
-      <p class="hint" style="margin-top:0">Mehrere Fächer gleichzeitig üben oder wiederholen. Die Fragen werden quer gemischt. Anzahl und Modus (Lernen/Prüfung) nimmt er von oben.</p>
-      <div class="tiles" id="mixChips"></div>
-      <div class="row" style="margin-top:14px"><button class="btn" id="goMix" type="button">Mix starten</button><span class="hint" id="mixInfo" style="margin:0"></span></div>
+      <h3 id="themenH" class="fold" role="button" tabindex="0">Themen</h3>
+      <div id="chips"></div>
+      <div class="row" id="goRow" style="margin-top:14px"><button class="btn" id="go" type="button">Test starten</button><span class="hint" id="goInfo" style="margin:0"></span></div>
+      <p class="hint hidden" id="mixHint" style="margin-top:14px"></p>
+      <div class="row hidden" id="mixRow" style="margin-top:10px"><button class="btn" id="goMix" type="button">Mix starten</button><span class="hint" id="mixInfo" style="margin:0"></span></div>
+      <div id="examBox" class="hidden">
+        <p class="hint" style="margin-top:14px">Aufgebaut wie die echte IHK-Prüfung: Zeit läuft, kein Feedback, am Ende gibt es die Note. Die Vertiefungsthemen aus Wirtschaft kommen nicht vor.</p>
+        <div class="examlist" id="examList"></div>
+      </div>
     </div>
   </section>
 
@@ -438,9 +441,11 @@ let fach = null, TAGS = {}, BUILTIN = [];
 function hid(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return "b"+(h>>>0).toString(36); }
 
 /* ---------- Speicher (localStorage mit Fallback) ---------- */
+let zufall = false;
 const mem = {};
 function load(k,def){ try{ const v=localStorage.getItem(k); if(v!==null) return JSON.parse(v); }catch(e){} return k in mem ? mem[k] : def; }
 function save(k,v){ mem[k]=v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+zufall = !!load("quiz_zufall", false);
 let K_SEEN, K_STATS, K_CUSTOM, custom = [], stats = {q:{}, hist:[]};
 const allQ = () => BUILTIN;
 
@@ -511,8 +516,12 @@ function initMascot(){
 }
 function renderFachBar(){
   const bar=$("fachBar"); bar.innerHTML=""; bar.classList.toggle("hidden", FACH_IDS.length<2);
-  FACH_IDS.forEach(id=>{ const b=document.createElement("button"); b.type="button"; b.textContent=FACH_DATA[id].name; b.setAttribute("aria-pressed", id===fach);
-    b.onclick=()=>{ if(id===fach) return; test=null; clearInterval(tick); minutesTouched=false; setFach(id); setTab("practice"); }; bar.appendChild(b); });
+  const multi = zufall && FACH_IDS.length>1;
+  FACH_IDS.forEach(id=>{ const b=document.createElement("button"); b.type="button"; b.textContent=FACH_DATA[id].name; b.setAttribute("aria-pressed", multi ? mixSel.has(id) : id===fach);
+    b.onclick=()=>{
+      if(multi){ if(mixSel.has(id)){ if(mixSel.size<2) return; mixSel.delete(id); } else mixSel.add(id); save("mix_sel",[...mixSel]); test=null; clearInterval(tick); document.dispatchEvent(new Event("mixchange")); renderFachBar(); setTab("practice"); return; }
+      if(id===fach) return; test=null; clearInterval(tick); minutesTouched=false; setFach(id); setTab("practice"); };
+    bar.appendChild(b); });
 }
 
 /* ---------- Navigation ---------- */
@@ -544,12 +553,33 @@ function renderPractice(){
   $("stRate").textContent = (rt[0]+rt[1]) ? Math.round(rt[0]/(rt[0]+rt[1])*100)+" %" : "–";
   $("stTests").textContent = stats.hist.length;
   const chips=$("chips"); chips.innerHTML="";
-  Object.keys(TAGS).forEach(t=>{
-    const n = pool.filter(p=>p.tag===t).length; if(!n) return;
-    const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", selTags.has(t));
-    b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^(WG)?\d+\s*·\s*/,""))+'</span><span class="tn">'+tileInfo(t,pool)+'</span>';
-    b.onclick=()=>{ selTags.has(t)?selTags.delete(t):selTags.add(t); renderPractice(); };
-    chips.appendChild(b);
+  const col=new Set(load("ui_collapsed",[])); const saveCol=()=>save("ui_collapsed",[...col]);
+  const th=$("themenH"); th.classList.toggle("zu", col.has("_all")); chips.classList.toggle("hidden", col.has("_all"));
+  th.onclick=()=>{ col.has("_all")?col.delete("_all"):col.add("_all"); saveCol(); renderPractice(); };
+  th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); th.click(); } };
+  const groups={}, order=[];
+  Object.keys(TAGS).forEach(t=>{ if(!pool.some(p=>p.tag===t)) return;
+    const m=fach==="wirtschaft" && /^(.*?)\s·\s/.exec(TAGS[t]); const g=m?m[1]:""; if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(t); });
+  order.forEach(g=>{
+    const key=fach+"|"+g, tags=groups[g];
+    if(order.length>1){
+      const hd=document.createElement("h4"); hd.className="fold gh"+(col.has(key)?" zu":""); hd.setAttribute("role","button"); hd.tabIndex=0;
+      const sel=tags.filter(t=>selTags.has(t)).length;
+      hd.innerHTML=esc(g)+"<small>"+sel+"/"+tags.length+" gewählt</small>";
+      hd.onclick=()=>{ col.has(key)?col.delete(key):col.add(key); saveCol(); renderPractice(); };
+      hd.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); hd.click(); } };
+      chips.appendChild(hd);
+      if(col.has(key)) return;
+    }
+    const grid=document.createElement("div"); grid.className="tiles";
+    tags.forEach(t=>{
+      const n = pool.filter(p=>p.tag===t).length;
+      const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", selTags.has(t));
+      b.innerHTML='<span class="ti">'+(TAG_ICON[t]||"📚")+'</span><span class="tt">'+esc(TAGS[t].replace(/^(WG)?\d+\s*·\s*/,"").replace(g&&order.length>1?new RegExp("^"+g.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s·\\s"):/^$/,""))+'</span><span class="tn">'+tileInfo(t,pool)+'</span>';
+      b.onclick=()=>{ selTags.has(t)?selTags.delete(t):selTags.add(t); renderPractice(); };
+      grid.appendChild(b);
+    });
+    chips.appendChild(grid);
   });
   const p = poolFor(selTags), want = +$("size").value, size = Math.min(want, p.length);
   $("minWrap").classList.toggle("hidden", mode()!=="exam");
@@ -581,22 +611,53 @@ function pickQuestions(tags, size){
 $("go").onclick = ()=> startTest(pickQuestions(selTags, +$("size").value), mode(), mode()==="exam" ? Math.max(1,+$("minutes").value||defaultMinutes(+$("size").value)) : 0);
 
 /* ---------- ZUFALLS-MIX (mehrere Fächer) ---------- */
-let mixSel = new Set(load("mix_sel", FACH_IDS)); let mixStats = {};
+let mixSel = new Set((load("mix_sel", FACH_IDS)||[]).filter(f=>FACH_IDS.includes(f))); if(!mixSel.size) FACH_IDS.forEach(f=>mixSel.add(f)); let mixStats = {};
 function statsFor(it){ if(!test.mix) return stats; const f=it.p.f; return mixStats[f]||(mixStats[f]=load(f+"_stats_v3",{q:{},hist:[]})); }
 function mixPool(){
   const out=[]; FACH_IDS.forEach(f=>{ if(!mixSel.has(f)) return; migrateGroup(f); const d=FACH_DATA[f];
-    d.raw.forEach(r=>out.push({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6], f:f})); });
+    d.raw.forEach(r=>{ if(f==="wirtschaft" && VERT.has(r[0])) return; out.push({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6], f:f}); }); });
   return out;
 }
+const VERT = new Set(["K5","K6","K7","K8","K9"]); /* Vertiefung (Kostenrechnung, Kalkulation, Deckungsbeitrag, Marketing, Daten): nicht in Mix und Prüfung */
+function balanced(pool, n, keyFn){
+  const g={}; shuffle(pool).forEach(p=>{ const k=keyFn(p); (g[k]=g[k]||[]).push(p); });
+  const keys=shuffle(Object.keys(g)), out=[];
+  while(out.length<n && keys.some(k=>g[k].length)){ keys.forEach(k=>{ if(out.length<n && g[k].length) out.push(g[k].pop()); }); }
+  return out;
+}
+function qsOf(f, tagFilter){
+  migrateGroup(f);
+  return FACH_DATA[f].raw.filter(r=>!(f==="wirtschaft" && VERT.has(r[0])) && (!tagFilter||tagFilter(r[0]))).map(r=>({id:hid(r[1]), tag:r[0], q:r[1], correct:r[2], wrong:r.slice(3,6), exp:r[6], f:f}));
+}
+const EXAMS = [
+  {id:"A", title:"FISI Teil A: Konzeption und Administration", info:"30 Fragen · 45 Minuten · Hardware, Server, Backup, Service, CPS, IT-Sicherheit",
+   min:45, facher:["hw","ssq","cps","nw"],
+   build(){ return [].concat(balanced(qsOf("hw"),14,p=>p.tag), balanced(qsOf("ssq"),8,p=>p.tag), balanced(qsOf("cps"),5,p=>p.tag), balanced(qsOf("nw",t=>t==="N11"),3,p=>p.tag)); }},
+  {id:"B", title:"FISI Teil B: Analyse und Entwicklung von Netzwerken", info:"30 Fragen · 45 Minuten · IP, Routing, VLAN, WLAN, VoIP und mehr",
+   min:45, facher:["nw"],
+   build(){ return balanced(qsOf("nw",t=>t!=="N11"),30,p=>p.tag); }},
+  {id:"C", title:"Wirtschafts- und Sozialkunde (WiSo)", info:"30 Fragen · 60 Minuten · Ausbildung, Arbeitsrecht, Sozialversicherung, Rechtsformen, Märkte",
+   min:60, facher:["wirtschaft"],
+   build(){ return balanced(qsOf("wirtschaft"),30,p=>p.tag); }}
+];
+function startExam(ex){
+  const qs=shuffle(ex.build()); if(!qs.length) return;
+  const merged={}; ex.facher.forEach(f=>{ const d=FACH_DATA[f]; Object.keys(d.tags).forEach(t=>{ merged[t]=d.name+" · "+d.tags[t].replace(/^(WG)?\d+\s*·\s*/,""); }); });
+  TAGS=merged; mixStats={};
+  startTest(qs, "exam", ex.min, true);
+}
 function renderMix(){
-  const box=$("mixChips"); if(!box) return; box.innerHTML="";
-  FACH_IDS.forEach(f=>{
-    const b=document.createElement("button"); b.type="button"; b.className="tile"; b.setAttribute("aria-pressed", mixSel.has(f));
-    b.innerHTML='<span class="tt">'+esc(FACH_DATA[f].name)+'</span><span class="tn">'+FACH_DATA[f].raw.length+' Fragen</span>';
-    b.onclick=()=>{ mixSel.has(f)?mixSel.delete(f):mixSel.add(f); save("mix_sel",[...mixSel]); renderMix(); };
-    box.appendChild(b);
-  });
+  const exam = mode()==="exam";
+  $("examBox").classList.toggle("hidden", !exam);
+  $("inlineRow").classList.toggle("hidden", exam);
+  const on = !exam && zufall && FACH_IDS.length>1;
+  ["chips","themenH","goRow"].forEach(id=>$(id).classList.toggle("hidden", on||exam));
+  $("mixRow").classList.toggle("hidden", !on); $("mixHint").classList.toggle("hidden", !on);
+  $("standBox").classList.toggle("hidden", on);
+  if(exam){ const L=$("examList"); if(!L.children.length){ EXAMS.forEach(ex=>{ const d=document.createElement("div"); d.className="exam"; d.innerHTML="<b>"+esc(ex.title)+"</b><span>"+esc(ex.info)+"</span>"; const b=document.createElement("button"); b.type="button"; b.className="btn"; b.textContent="Prüfung starten"; b.onclick=()=>startExam(ex); d.appendChild(b); L.appendChild(d); }); } return; }
+  if(!on) return;
   const n=mixPool().length, size=Math.min(+$("size").value, n);
+  $("mixHint").textContent = "Zufalls-Mix aus: "+FACH_IDS.filter(f=>mixSel.has(f)).map(f=>FACH_DATA[f].name).join(", ")+". Fächer wählst du links.";
   $("goMix").disabled = n===0;
   $("goMix").textContent = (mode()==="exam"?"Mix-Prüfung starten":"Mix starten")+" ("+size+" Fragen)";
   $("mixInfo").textContent = n ? "" : "Wähle mindestens ein Fach.";
@@ -605,7 +666,7 @@ $("goMix").onclick = ()=>{
   const pool=mixPool(), size=Math.min(+$("size").value, pool.length); if(!size) return;
   const merged={}; FACH_IDS.forEach(f=>{ if(mixSel.has(f)){ const d=FACH_DATA[f]; Object.keys(d.tags).forEach(t=>{ merged[t]=d.name+" · "+d.tags[t].replace(/^(WG)?\d+\s*·\s*/,""); }); } });
   TAGS = merged; mixStats = {};
-  startTest(shuffle(pool).slice(0,size), mode(), mode()==="exam" ? Math.max(1,+$("minutes").value||defaultMinutes(size)) : 0, true);
+  startTest(shuffle(balanced(pool,size,p=>p.f)), "learn", 0, true);
 };
 
 /* ---------- TEST ---------- */
