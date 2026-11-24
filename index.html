@@ -132,22 +132,23 @@ textarea{min-height:64px;resize:vertical}
 
 /* ---------- Maskottchen ---------- */
 .mrow{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
-.mascot{flex:0 0 auto;width:76px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.mascot{position:relative;flex:0 0 auto;width:76px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .mascot .mi{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none;transform-origin:50% 100%}
+.mascot .acc{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;background-repeat:no-repeat;background-size:100% 100%;background-image:var(--acc-neck,none),var(--acc-face,none),var(--acc-hat,none);transform-origin:50% 100%}
 .mascot .mi-s,.mascot .mi-c,.mascot .mi-t,.mascot .mi-w{display:none}
 .mascot[data-mood=sad] .mi-h,.mascot[data-mood=cheer] .mi-h,.mascot[data-mood=think] .mi-h,.mascot[data-mood=wow] .mi-h{display:none}
 .mascot[data-mood=sad] .mi-s,.mascot[data-mood=cheer] .mi-c,.mascot[data-mood=think] .mi-t,.mascot[data-mood=wow] .mi-w{display:block}
-.mascot[data-mood=idle] .mi,.mascot[data-mood=think] .mi,.mascot[data-mood=wow] .mi{animation:breathe 4s ease-in-out infinite}
-.mascot[data-mood=sad] .mi{transform:rotate(-2deg)}
-.mascot.jump .mi{animation:hop .6s ease}
-.mascot[data-mood=cheer] .mi{animation:hop .7s ease infinite}
+.mascot[data-mood=idle] .mi,.mascot[data-mood=think] .mi,.mascot[data-mood=wow] .mi,.mascot[data-mood=idle] .acc,.mascot[data-mood=think] .acc,.mascot[data-mood=wow] .acc{animation:breathe 4s ease-in-out infinite}
+.mascot[data-mood=sad] .mi,.mascot[data-mood=sad] .acc{transform:rotate(-2deg)}
+.mascot.jump .mi,.mascot.jump .acc{animation:hop .6s ease}
+.mascot[data-mood=cheer] .mi,.mascot[data-mood=cheer] .acc{animation:hop .7s ease infinite}
 .bubble{position:relative;background:var(--accent-weak);border-radius:14px;padding:8px 12px;font-size:.92rem;line-height:1.35;min-height:38px;display:flex;align-items:center}
 .bubble:before{content:"";position:absolute;left:-7px;top:50%;margin-top:-7px;border:7px solid transparent;border-left:0;border-right-color:var(--accent-weak)}
 @keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.03)}}
 @keyframes wag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(7deg)}}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
 @keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-14px) scale(1.04,.97)}65%{transform:translateY(0) scale(1.03,.96)}}
-@media (prefers-reduced-motion:reduce){.mascot .mi,.mascot[data-mood=cheer] .mi{animation:none}}
+@media (prefers-reduced-motion:reduce){.mascot .mi,.mascot .acc,.mascot[data-mood=cheer] .mi,.mascot[data-mood=cheer] .acc{animation:none}}
 
 /* ---------- Warmes Design ---------- */
 body{font-family:ui-rounded,"SF Pro Rounded","Nunito","Quicksand","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;position:relative}
@@ -221,6 +222,7 @@ input[type=text],input[type=number],select,textarea{border-radius:14px;border:2p
 .fold.zu::before{transform:rotate(-90deg)}
 .gh{margin:12px 0 2px;font-size:.95rem}
 .fold small{margin-left:auto;font-weight:500;color:var(--muted);font-size:.8rem}
+@media (max-width:480px){.tabs button{font-size:.8rem;padding:9px 2px}}
 .examlist{display:grid;gap:10px;margin-top:10px}
 .exam{border:2px solid var(--line);border-radius:18px;padding:12px 14px;background:var(--card);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .exam b{font-size:1rem}
@@ -493,7 +495,7 @@ const TAG_ICON = {K1:"🛒",K2:"🌍",K3:"📝",K4:"⏰",K5:"🧮",K6:"🏷️",
   S1:"✅",S2:"🔄",S3:"🗺️",S4:"🔎",S5:"🗣️",S6:"🎧",S7:"🎫",S8:"🛠️",
   C1:"🤖",C2:"📡",C3:"🔧",C4:"🔌",C5:"🎚️",C6:"⚙️",C7:"🎛️",C8:"⏱️",C9:"☁️",P1:"🎓",P2:"🤝",P3:"🧒",P4:"📜",P5:"✉️",P6:"🏥",P7:"🦺",P8:"🏢",P9:"📈",P10:"🗂️",
   W1:"🏪",W2:"✍️",W3:"🤝",W4:"🏢",W5:"🔗",W6:"🎓",W7:"💶",W8:"📄",W9:"🛡️",W10:"👥",W11:"⚖️",W12:"🧾",W13:"🗂️",W14:"🧯",TX:"⭐"};
-const MASCOT_SVG = `<img class="mi mi-h" src="sq-happy.webp" alt="" draggable="false"><img class="mi mi-s" src="sq-sad.webp" alt="" draggable="false"><img class="mi mi-c" src="sq-cheer.webp" alt="" draggable="false"><img class="mi mi-t" src="sq-think.webp" alt="" draggable="false"><img class="mi mi-w" src="sq-wow.webp" alt="" draggable="false">`;
+const MASCOT_SVG = `<img class="mi mi-h" src="sq-happy.webp" alt="" draggable="false"><img class="mi mi-s" src="sq-sad.webp" alt="" draggable="false"><img class="mi mi-c" src="sq-cheer.webp" alt="" draggable="false"><img class="mi mi-t" src="sq-think.webp" alt="" draggable="false"><img class="mi mi-w" src="sq-wow.webp" alt="" draggable="false"><i class="acc"></i>`;
 const SAY = {
   ok:["Richtig! 🌰","Nuss geknackt!","Stark, weiter so!","Sauber gelöst!","Das sitzt!"],
   bad:["Nicht schlimm – merk dir die Erklärung.","Das kommt noch!","Aus Fehlern wird man schlau.","Knapp daneben, weiter geht's."],
@@ -526,7 +528,7 @@ function renderFachBar(){
 
 /* ---------- Navigation ---------- */
 let tab="practice";
-function showSection(id){ ["practice","stats","test","result","more","calc","szx"].forEach(s=>{ const e=$(s); if(e) e.classList.toggle("hidden", s!==id); }); window.scrollTo(0,0); }
+function showSection(id){ ["practice","stats","test","result","more","calc","szx","shop"].forEach(s=>{ const e=$(s); if(e) e.classList.toggle("hidden", s!==id); }); window.scrollTo(0,0); }
 function setTab(t){
   tab=t; $("tabs").classList.remove("hidden");
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===t));
@@ -847,5 +849,6 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 <script src="coach.js"></script>
 <script src="szenario.js"></script>
 <script src="extras.js"></script>
+<script src="shop.js"></script>
 </body>
 </html>
