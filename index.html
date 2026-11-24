@@ -554,7 +554,7 @@ function renderPractice(){
   $("stTests").textContent = stats.hist.length;
   const chips=$("chips"); chips.innerHTML="";
   const col=new Set(load("ui_collapsed",[])); const saveCol=()=>save("ui_collapsed",[...col]);
-  const th=$("themenH"); th.classList.toggle("zu", col.has("_all")); chips.classList.toggle("hidden", col.has("_all"));
+  const th=$("themenH"); th.classList.toggle("zu", col.has("_all")); chips.classList.toggle("hidden", col.has("_all") || $("themenH").classList.contains("hidden"));
   th.onclick=()=>{ col.has("_all")?col.delete("_all"):col.add("_all"); saveCol(); renderPractice(); };
   th.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); th.click(); } };
   const groups={}, order=[];
@@ -636,6 +636,9 @@ const EXAMS = [
   {id:"B", title:"FISI Teil B: Analyse und Entwicklung von Netzwerken", info:"30 Fragen · 45 Minuten · IP, Routing, VLAN, WLAN, VoIP und mehr",
    min:45, facher:["nw"],
    build(){ return balanced(qsOf("nw",t=>t!=="N11"),30,p=>p.tag); }},
+  {id:"AP1", title:"AP Teil 1: Einrichten eines IT-gestützten Arbeitsplatzes", info:"40 Fragen · 60 Minuten · Hardware, Netzwerk-Grundlagen, IT-Sicherheit, Service und Support",
+   min:60, facher:["hw","nw","ssq"],
+   build(){ return [].concat(balanced(qsOf("hw"),16,p=>p.tag), balanced(qsOf("nw",t=>["N1","N2","N3","N4","N5","N11"].includes(t)),12,p=>p.tag), balanced(qsOf("ssq",t=>["S4","S5","S6","S7","S8"].includes(t)),12,p=>p.tag)); }},
   {id:"C", title:"Wirtschafts- und Sozialkunde (WiSo)", info:"30 Fragen · 60 Minuten · Ausbildung, Arbeitsrecht, Sozialversicherung, Rechtsformen, Märkte",
    min:60, facher:["wirtschaft"],
    build(){ return balanced(qsOf("wirtschaft"),30,p=>p.tag); }}
