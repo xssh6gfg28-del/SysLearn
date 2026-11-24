@@ -526,11 +526,11 @@ function renderFachBar(){
 
 /* ---------- Navigation ---------- */
 let tab="practice";
-function showSection(id){ ["practice","stats","test","result"].forEach(s=>$(s).classList.toggle("hidden", s!==id)); window.scrollTo(0,0); }
+function showSection(id){ ["practice","stats","test","result","more","calc","szx"].forEach(s=>{ const e=$(s); if(e) e.classList.toggle("hidden", s!==id); }); window.scrollTo(0,0); }
 function setTab(t){
   tab=t; $("tabs").classList.remove("hidden");
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===t));
-  showSection(t); if(t==="practice") renderPractice(); if(t==="stats") renderStats();
+  showSection(t); if(t==="practice") renderPractice(); if(t==="stats") renderStats(); if(window.TabHooks&&TabHooks[t]) TabHooks[t]();
 }
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 
@@ -644,6 +644,7 @@ const EXAMS = [
    build(){ return balanced(qsOf("wirtschaft"),30,p=>p.tag); }}
 ];
 function startExam(ex){
+  if(ex.run){ ex.run(); return; }
   const qs=shuffle(ex.build()); if(!qs.length) return;
   const merged={}; ex.facher.forEach(f=>{ const d=FACH_DATA[f]; Object.keys(d.tags).forEach(t=>{ merged[t]=d.name+" · "+d.tags[t].replace(/^(WG)?\d+\s*·\s*/,""); }); });
   TAGS=merged; mixStats={};
@@ -844,5 +845,6 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 </script>
 <script src="coach.js"></script>
 <script src="szenario.js"></script>
+<script src="extras.js"></script>
 </body>
 </html>

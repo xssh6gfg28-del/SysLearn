@@ -72,7 +72,7 @@ document.addEventListener("mixchange", () => { resetView(); });
 /* setTab/setFach so erweitern, dass die Szenario-Kartei eingehängt wird */
 const _setTab = setTab, _setFach = setFach;
 setTab = function(t){
-  if(kartei === "szen" && (zufall ? data().length : ((window.SZEN_DATA || {})[fach] || []).length)){
+  if(t === "practice" && kartei === "szen" && (zufall ? data().length : ((window.SZEN_DATA || {})[fach] || []).length)){
     $("tabs").classList.add("hidden"); showSection("szen"); sec.classList.remove("hidden"); render(); return;
   }
   sec.classList.add("hidden"); _setTab(t);
