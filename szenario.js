@@ -37,7 +37,7 @@ const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "
 /* ---------- Umschalter MC / Szenario ---------- */
 const bar = document.createElement("div"); bar.className = "kartei"; bar.id = "karteiBar";
 bar.setAttribute("role", "group"); bar.setAttribute("aria-label", "Kartei wählen");
-$("fachBar").parentNode.appendChild(bar);
+$("fachBar").after(bar);
 const sec = document.createElement("section"); sec.id = "szen"; sec.className = "hidden";
 document.querySelector(".wrap").appendChild(sec);
 
@@ -64,6 +64,7 @@ setTab = function(t){
 setFach = function(id){ _setFach(id); sz = null; loadProg(); selTopics.clear(); data().forEach(d => selTopics.add(d.t)); renderBar(); };
 
 /* ---------- Ansichten ---------- */
+function hop(m){ if(!m) return; m.onclick = () => { m.classList.remove("jump"); void m.offsetWidth; m.classList.add("jump"); }; }
 function render(){
   loadProg();
   if(!sz) return renderHome();
@@ -78,14 +79,16 @@ function renderHome(){
   sec.innerHTML = `<div class="card"><div class="mrow"></div>
     <h2>Szenario-Kartei</h2>
     <p class="sub">Lies den Fall, schreib deine Antwort in eigenen Worten und vergleiche sie mit der Musterantwort.</p>
-    <div class="stat"><b>${done}</b> von <b>${all.length}</b> Fällen sicher gewusst</div>
+    <div id="szGoal"></div>
+    <div class="stat"><div><b>${done}</b><span>von ${all.length} Fällen sicher gewusst</span></div></div>
     <h3>Themen</h3><div class="tiles" id="szTiles"></div>
     <div class="row" style="margin-top:14px;align-items:flex-end">
       <label class="field"><span>Fälle pro Runde</span><select id="szSize"><option value="5">5</option><option value="10" selected>10</option><option value="999">alle</option></select></label>
       <button class="btn" id="szGo" type="button">Starten</button></div>
     <p class="msg bad hidden" id="szMsg"></p>
     <p style="margin-top:14px"><button class="link" id="szReset" type="button">Szenario-Fortschritt zurücksetzen</button></p></div>`;
-  initMascot(); mascot("idle", "Heute mal Szenarien? Schreib deine Antwort selbst, das bringt am meisten.");
+  initMascot(); mascot("idle", done === all.length ? "Alle Fälle sicher gewusst. Stark!" : "Heute mal Szenarien? Schreib deine Antwort selbst, das bringt am meisten.");
+  Coach.mountGoal($("szGoal"), render);
   const tiles = $("szTiles");
   topics.forEach(t => {
     const items = all.filter(d => d.t === t), ok = items.filter(d => prog.ok[d.id]).length;
@@ -107,12 +110,13 @@ function renderHome(){
 
 function renderCard(){
   const d = sz.items[sz.idx], pct = Math.round(sz.idx / sz.items.length * 100);
+  const msgHtml = sz.msg ? '<p class="msg ok">' + esc(sz.msg) + "</p>" : ""; sz.msg = "";
   sec.innerHTML = `<div class="card">
     <div class="top"><span>Fall ${sz.idx + 1} / ${sz.items.length}</span><span class="badge">${esc(d.t)}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
-    <div class="mrow"></div>
-    <h2 class="szh">${esc(d.h)}</h2>
-    <p class="szf">${esc(d.f)}</p>
+    ${msgHtml}
+    <div class="srow"><div class="mascot" id="szM" data-mood="idle" role="img" aria-label="Eichhörnchen">${MASCOT_SVG}</div>
+      <div class="bubble long"><div><b style="display:block;margin-bottom:4px">${esc(d.h)}</b><span class="szf" style="margin:0">${esc(d.f)}</span></div></div></div>
     <p class="sza"><b>Aufgabe:</b> ${esc(d.a)}</p>
     <textarea class="szans" id="szAns" placeholder="Schreib deine Antwort in eigenen Worten. Ganze Sätze, so wie in der Prüfung." aria-label="Deine Antwort"></textarea>
     <p class="msg bad hidden" id="szMsg"></p>
@@ -120,7 +124,7 @@ function renderCard(){
       <button class="btn secondary" id="szSkip" type="button">Überspringen</button></div>
     <div id="szRes" class="hidden"></div>
     <p style="margin-top:12px"><button class="link" id="szStop" type="button">Runde beenden</button></p></div>`;
-  initMascot(); mascot("ask", "Wie würdest du vorgehen? Schreib es auf.");
+  hop($("szM"));
   window.scrollTo(0, 0);
   $("szAns").oninput = () => $("szMsg").classList.add("hidden");
   $("szCheck").onclick = () => check(d);
@@ -135,7 +139,9 @@ function check(d){
   const hits = d.p.map(p => p[1].some(k => n.includes(norm(k))));
   $("szAns").readOnly = true; $("szCheck").classList.add("hidden"); $("szSkip").classList.add("hidden");
   const res = $("szRes"); res.classList.remove("hidden");
-  res.innerHTML = `<h3>Dein Abgleich mit der Checkliste</h3>
+  res.innerHTML = `<div class="srow szfb"><div class="mascot" id="szFbM" data-mood="idle" role="img" aria-label="Eichhörnchen">${MASCOT_SVG}</div>
+      <div class="bubble long"><div id="szFbT"></div></div></div>
+    <h3>Dein Abgleich mit der Checkliste</h3>
     <p class="hint">Die Haken sind ein Vorschlag anhand von Stichwörtern. Korrigiere sie, wenn du etwas anders formuliert hast.</p>
     <ul class="szpts" id="szPts"></ul>
     <div class="szmuster"><b>Musterantwort</b><br>${esc(d.m)}</div>
@@ -159,16 +165,23 @@ function check(d){
 }
 
 function suggest(){
-  const boxes = [...document.querySelectorAll("#szPts input")], n = boxes.filter(b => b.checked).length, r = n / boxes.length;
+  const d = sz.items[sz.idx], boxes = [...document.querySelectorAll("#szPts input")], n = boxes.filter(b => b.checked).length, r = n / boxes.length;
   const k = r >= 0.75 ? "ok" : r >= 0.4 ? "part" : "no";
   document.querySelectorAll("#szRate button").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === k));
-  mascot(k === "ok" ? "happy" : "idle", k === "ok" ? pickSay(SAY.ok) : k === "part" ? "Fast! Schau dir die fehlenden Punkte an." : pickSay(SAY.bad));
+  const miss = d.p.filter((p, i) => !boxes[i].checked).map(p => p[0]);
+  let txt;
+  if(k === "ok") txt = "Stark! Du hast " + n + " von " + boxes.length + " Punkten getroffen." + (miss.length ? " Noch gefehlt: " + miss.join("; ") + "." : " Nichts übersehen, das sitzt.");
+  else if(k === "part") txt = "Fast! " + n + " von " + boxes.length + " Punkten. Es fehlen noch: " + miss.join("; ") + ".";
+  else txt = n + " von " + boxes.length + " Punkten, das war noch dünn. Lies die Musterantwort in Ruhe und merk dir besonders: " + miss.slice(0, 3).join("; ") + ".";
+  $("szFbT").textContent = txt;
+  $("szFbM").dataset.mood = k === "ok" ? "happy" : k === "part" ? "idle" : "sad";
 }
 
 function rateIt(d, k){
   prog.tries[d.id] = (prog.tries[d.id] || 0) + 1;
   if(k === "ok") prog.ok[d.id] = 1; else delete prog.ok[d.id];
   save(KEY(), prog);
+  if(Coach.card(k === "ok" ? 3 : k === "part" ? 1 : 0)) sz.msg = "Tagesziel geschafft! +5 Nüsse 🌰";
   sz.res.push(k); sz.idx++; render();
 }
 
