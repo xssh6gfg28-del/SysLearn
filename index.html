@@ -586,6 +586,7 @@ function renderPractice(){
   if(!minutesTouched) $("minutes").value = defaultMinutes(size||want);
   $("go").disabled = p.length===0;
   $("go").textContent = (mode()==="exam"?"Prüfung starten":"Test starten")+" ("+size+" Fragen)";
+  if(window.onPractice) onPractice();
   const fresh = p.filter(q=>!seen.has(q.id)).length;
   $("goInfo").textContent = p.length ? "" : "Wähle mindestens ein Thema.";
 }

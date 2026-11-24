@@ -11,6 +11,12 @@ const css = `
 .xl .trk i{display:block;height:100%;background:var(--ok)}
 .xl .trk i.mid{background:var(--warn)}.xl .trk i.low{background:var(--bad)}
 .rep{font-size:.82rem;margin:8px 0 0}
+#calc .tile{min-height:0}
+#calc .tile:after{display:none!important}
+#calc .tile .tt{color:var(--text)}
+#calc .tile[aria-pressed="true"] .tt{color:var(--accent)}
+#calc .tile .tt{white-space:nowrap}
+#calc input.cans:focus{outline:none;border-color:var(--accent)}
 #calc .cq{font-size:1.15rem;font-weight:700;line-height:1.5;margin:12px 0}
 #calc .cans{font-size:1.1rem}
 #calc .cfb{border-radius:14px;padding:10px 12px;margin-top:10px;line-height:1.5;white-space:pre-line}
@@ -298,6 +304,48 @@ EXAMS.push(
 );
 
 { const ci = EXAMS.findIndex(x => x.id === "C"); if(ci >= 0) EXAMS.push(EXAMS.splice(ci, 1)[0]); }
+
+/* ================= HEUTE-PLAN (aus dem Prüfungstermin) ================= */
+const plan = document.createElement("div"); plan.className = "card"; plan.id = "planCard"; plan.style.gridColumn = "1 / -1";
+$("practice").insertBefore(plan, $("practice").firstChild);
+function stand(f){
+  try{ migrateGroup(f); }catch(e){}
+  const d = FACH_DATA[f]; if(!d) return null;
+  const qs = d.raw.filter(r => !(f === "wirtschaft" && VERT.has(r[0])));
+  const sq = (load(f + "_stats_v3", {q: {}}).q) || {};
+  let seen = 0, r = 0, w = 0; qs.forEach(x => { const s = sq[hid(x[1])]; if(s && s.r + s.w > 0){ seen++; r += s.r; w += s.w; } });
+  return {f, name: d.name, total: qs.length, seen, pc: (r + w) ? Math.round(r / (r + w) * 100) : null, cov: seen / qs.length};
+}
+window.onPractice = function(){
+  const ed = load("exam_date", "");
+  if(!ed){
+    plan.innerHTML = `<h2 style="margin:0 0 6px">Dein Lernplan</h2><p class="hint" style="margin:0 0 10px">Trag dein Prüfungsdatum ein, dann rechnet SysLearn dir aus, was du heute lernen solltest.</p><button class="btn small" id="planSet" type="button">Datum eintragen</button>`;
+    $("planSet").onclick = () => setTab("more"); return;
+  }
+  const days = Math.ceil((new Date(ed + "T08:00:00") - new Date()) / 86400000);
+  if(days <= 0){ plan.innerHTML = `<h2 style="margin:0">Lernplan</h2><p class="hint" style="margin:6px 0 0">Der Prüfungstermin ist erreicht oder vorbei. Neues Datum unter „Mehr".</p>`; return; }
+  const st = FACH_IDS.map(stand).filter(Boolean);
+  const unseen = st.reduce((a, x) => a + x.total - x.seen, 0);
+  const today = Math.min(60, Math.max(10, Math.ceil(unseen / days / 5) * 5));
+  const best = st.slice().sort((a, b) => ((a.pc === null ? 0 : a.pc) * 0.6 + a.cov * 100 * 0.4) - ((b.pc === null ? 0 : b.pc) * 0.6 + b.cov * 100 * 0.4))[0];
+  let phase = "";
+  if(days <= 7) phase = "Letzte Woche: täglich eine Probeprüfung im Prüfungsmodus, dazu die Schwächen wiederholen.";
+  else if(days <= 21) phase = "Endspurt: mach pro Woche mindestens zwei Probeprüfungen und trainiere deine Schwächen.";
+  else if(unseen > 0) phase = "Erst alles einmal sehen, dann Schwächen wiederholen.";
+  else phase = "Alles einmal gesehen. Jetzt Schwächen wiederholen und Probeprüfungen machen.";
+  plan.innerHTML = `<div class="top"><h2 style="margin:0">Heute dran</h2><span class="badge">Noch ${days} Tage</span></div>
+    <p style="margin:8px 0 4px"><b>${today} Fragen</b> aus <b>${esc(best.name)}</b></p>
+    <p class="hint" style="margin:0 0 10px">${best.pc === null ? "Hier hast du noch kaum angefangen." : "Dein Stand hier: " + best.pc + " % richtig, " + Math.round(best.cov * 100) + " % gesehen."} ${esc(phase)}</p>
+    <div class="xrow" style="margin-top:0"><button class="btn small" id="planGo" type="button">Jetzt starten</button><button class="link" id="planMore" type="button">Termin ändern</button></div>`;
+  $("planMore").onclick = () => setTab("more");
+  $("planGo").onclick = () => {
+    if(typeof zufall !== "undefined" && zufall){ zufall = false; save("quiz_zufall", false); }
+    setFach(best.f); TAGS = Object.assign({}, FACH_DATA[best.f].tags);
+    const tags = new Set(Object.keys(TAGS).filter(t => !(best.f === "wirtschaft" && VERT.has(t))));
+    const qs = pickQuestions(tags, today); if(qs.length) startTest(qs, "learn", 0);
+  };
+};
+if(window.onPractice) onPractice();
 window.__dbg = {cur: () => cur, sx: () => sx};
 window.TabHooks = {more: renderMore, calc: openCalc};
 })();
